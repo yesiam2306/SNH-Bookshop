@@ -1,4 +1,5 @@
 <?php
+
 $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 
 session_set_cookie_params([

@@ -12,10 +12,6 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username, passhash, salt, role) VALUES
-('a', SHA2(CONCAT('1111222233334444', 'a'), 256), '1111222233334444', 'Admin'),
-('z', SHA2(CONCAT('abcdabcdabcdabcd', 'z'), 256), 'abcdabcdabcdabcd', 'User');
-
 DROP TABLE IF EXISTS session_tokens;
 CREATE TABLE session_tokens (
     selector VARCHAR(50) PRIMARY KEY,
@@ -25,7 +21,3 @@ CREATE TABLE session_tokens (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     UNIQUE (user_id)
 );
-
-
-
-SELECT * FROM session_tokens;

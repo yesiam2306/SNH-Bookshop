@@ -166,7 +166,8 @@ html, body {
 }
 
 .login-form input[type="email"],
-.login-form input[type="password"] {
+.login-form input[type="password"],
+.login-form input[type="text"] {
   width: 100%;
   padding: 0.6rem;
   font-size: 15px;
@@ -218,9 +219,58 @@ html, body {
   text-decoration: underline;
 } 
 
-.error-msg {
-    color: red;
-    font-size: 14px;
-    display: block;
-    margin-top: 0.3rem;
+.error-message {
+  color: red;
+  font-size: 14px;
+  display: block;
+  margin-top: 0.3rem;
+}
+
+ul{
+  padding-left: 1rem;
+}
+
+.password-rules li {
+  color: red;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.password-rules li.ok {
+  color: green;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 35px; 
+  box-sizing: border-box;
+}
+
+.input-wrapper button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.input-wrapper button img {
+    width: 20px;
+    height: 20px;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-password-toggle {
+    display: none !important;
 }

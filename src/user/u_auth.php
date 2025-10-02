@@ -15,18 +15,21 @@ require_once SRC_PATH . '/utils/log.php';
  */
 function current_user($mysqli)
 {
-    if (!empty($_SESSION['user_id'])) {
+    if (!empty($_SESSION['user_id']))
+    {
         log_info("SESSION - User {$_SESSION['user_id']} is logged in via session: ");
         return [
             'user_id'  => $_SESSION['user_id'],
-            'username' => $_SESSION['username'],
+            'email' => $_SESSION['email'],
             'role'     => $_SESSION['role']
         ];
     }
 
-    if (!empty($_COOKIE['remember_me'])) {
+    if (!empty($_COOKIE['remember_me']))
+    {
         $user = get_token($mysqli, $_COOKIE['remember_me']);
-        if ($user) {
+        if ($user)
+        {
             log_info("SESSION - User {$user['user_id']} is logged in via remember_me token");
             return $user;
         }
@@ -44,13 +47,15 @@ function get_token($mysqli, $cookie)
     list($selector, $validator) = explode(':', base64_decode($cookie));
 
     $token = \DBM\getToken($mysqli, $selector);
-    if (!$token || token_is_expired($token)) {
+    if (!$token || token_is_expired($token))
+    {
         log_warning('Token not found or expired');
         clear_remember_cookie();
         return null;
     }
 
-    if (!hash_equals($token['validator_hash'], hash('sha256', $validator))) {
+    if (!hash_equals($token['validator_hash'], hash('sha256', $validator)))
+    {
         log_error('FATAL - Invalid token. Possible hijack attempt.');
         clear_remember_cookie();
         \DBM\deleteTokensBySelector($mysqli, $selector); // Per invalidare il token rubato
@@ -58,14 +63,15 @@ function get_token($mysqli, $cookie)
     }
 
     $user = \DBM\getUserById($mysqli, $token['user_id']);
-    if (!$user) {
+    if (!$user)
+    {
         log_warning('Invalid token.');
         debug('FATAL EEROR: user_id in session_tokens non corrisponde a nessun utente.');
         clear_remember_cookie();
         return null;
     }
 
-    session_init($user['user_id'], $user['username'], $user['role']);
+    session_init($user['user_id'], $user['email'], $user['role']);
     return $user;
 }
 
@@ -74,11 +80,12 @@ function get_token($mysqli, $cookie)
  * Se $remember_me è true, genera un token per creare una sessione persistente.
  * In ogni caso, inizializza la sessione PHP.
  * Restituisce i dati dell'utente loggato. */
-function login($mysqli, $username, $password, $remember_me = false)
+function login($mysqli, $email, $password, $remember_me = false)
 {
-    $salt = \DBM\getSalt($mysqli, $username);
-    if (!$salt) {
-        $msg = "Invalid salt for user $username";
+    $salt = \DBM\getSalt($mysqli, $email);
+    if (!$salt)
+    {
+        $msg = "Invalid salt for user $email";
         debug($msg);
         $msg = 'DB connection failed';
         log_error($msg);
@@ -87,9 +94,10 @@ function login($mysqli, $username, $password, $remember_me = false)
 
     $passhash = hash('sha256', $salt['salt'] . $password);
 
-    $rv = \DBM\login($mysqli, $username, $passhash);
-    if (!$rv) {
-        $msg = "Invalid credentials for username $username";
+    $rv = \DBM\login($mysqli, $email, $passhash);
+    if (!$rv)
+    {
+        $msg = "Invalid credentials for email $email";
         log_warning($msg);
         // TODO: credo che qui vada messa la routine per bloccare l'utente dopo N tentativi falliti
         return null;
@@ -97,12 +105,13 @@ function login($mysqli, $username, $password, $remember_me = false)
 
     log_info("LOGIN - User {$rv['user_id']} logged in successfully");
 
-    if ($remember_me) {
+    if ($remember_me)
+    {
         generate_token($mysqli, $rv['user_id']);
     }
 
     session_start();
-    session_init($rv['user_id'], $username, $rv['role'], );
+    session_init($rv['user_id'], $email, $rv['role'], );
     return $rv;
 }
 
@@ -124,7 +133,7 @@ function generate_token($mysqli, $user_id)
         'remember_me',
         base64_encode($selector . ':' . $validator),
         [
-            'expires'  => time() + 30*24*60*60, // 1 mese
+            'expires'  => time() + 30 * 24 * 60 * 60, // 1 mese
             'path'     => '/',
             'secure'   => isset($_SERVER['HTTPS']),
             'httponly' => true,
@@ -134,11 +143,13 @@ function generate_token($mysqli, $user_id)
 
     $rv = \DBM\insertToken($mysqli, $selector, $validator_hash, $user_id);
 
-    if (!$rv) {
+    if (!$rv)
+    {
         $msg = 'DB connection failed';
         log_error($msg);
         die();
-    } else {
+    } else
+    {
         log_info("LOGIN - Token generated for user_id $user_id");
     }
 }
@@ -151,11 +162,11 @@ function generate_token($mysqli, $user_id)
  * __last_activity: timestamp dell'ultima attività per timeout automatico
  * __init_ip: indirizzo IP iniziale per prevenire hijacking
  * __init_ua: user agent iniziale per prevenire hijacking */
-function session_init($user_id, $username, $role)
+function session_init($user_id, $email, $role)
 {
     session_regenerate_id(true);
     $_SESSION['user_id']         = $user_id;
-    $_SESSION['username']        = $username;
+    $_SESSION['email']        = $email;
     $_SESSION['role']            = $role;
     $_SESSION['__csrf']          = bin2hex(random_bytes(32));
     $_SESSION['__last_activity'] = time();
@@ -166,7 +177,8 @@ function session_init($user_id, $username, $role)
 
 function logout($mysqli)
 {
-    if (session_status() !== PHP_SESSION_ACTIVE || empty($_SESSION['user_id'])) {
+    if (session_status() !== PHP_SESSION_ACTIVE || empty($_SESSION['user_id']))
+    {
         return;
     }
 
@@ -175,12 +187,14 @@ function logout($mysqli)
     clear_session();
 
     $rv = \DBM\deleteTokensByUserId($mysqli, $user_id);
-    if (!$rv) {
+    if (!$rv)
+    {
         $msg = 'DB connection failed';
         log_error($msg);
         $msg = 'Token non cancellato';
         debug($msg);
-    } else {
+    } else
+    {
         log_info("LOGOUT - User $user_id logged out and tokens deleted");
     }
 }
@@ -201,7 +215,8 @@ function clear_session()
 {
     // Cancella sessione PHP
     $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
+    if (ini_get('session.use_cookies'))
+    {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', [
             'expires'  => time() - 3600,
@@ -220,25 +235,29 @@ function token_is_expired($token)
     return (time() > strtotime($token['expires_at']));
 }
 
-function signup($mysqli, $username, $password)
+function signup($mysqli, $email, $password)
 {
     $salt     = bin2hex(random_bytes(16));
     $passhash = hash('sha256', $salt . $password);
 
-    $rv = \DBM\getUserByUsername($mysqli, $username);
-    if ($rv) {
-        $msg = 'SIGNUP - Signup failed because username already exists';
+    $rv = \DBM\getUserByEmail($mysqli, $email);
+    if ($rv)
+    {
+        $msg = 'SIGNUP - Signup failed because email already exists';
         log_warning($msg);
         return null;
     }
 
-    $rv = \DBM\insertUser($mysqli, $username, $passhash, $salt);
-    if (!$rv) {
+    var_dump($email);
+
+    $rv = \DBM\insertUser($mysqli, $email, $passhash, $salt);
+    if (!$rv)
+    {
         $msg = 'DB connection failed';
         log_error($msg);
         return null;
     }
 
-    log_info("SIGNUP - User $username registered successfully");
-    return login($mysqli, $username, $password, false);
+    log_info("SIGNUP - User $email registered successfully");
+    return login($mysqli, $email, $password, false);
 }

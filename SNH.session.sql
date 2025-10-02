@@ -1,17 +1,15 @@
 DROP DATABASE IF EXISTS SNH_Proj;
 CREATE DATABASE SNH_Proj;
 USE SNH_Proj;
-
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     passhash VARCHAR(255) NOT NULL,
     salt VARCHAR(32) NOT NULL,
-    role ENUM('User','Premium','Admin') DEFAULT 'User',
+    role ENUM('User', 'Premium', 'Admin') DEFAULT 'User',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 DROP TABLE IF EXISTS session_tokens;
 CREATE TABLE session_tokens (
     selector VARCHAR(50) PRIMARY KEY,

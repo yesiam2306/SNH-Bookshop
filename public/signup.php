@@ -1,32 +1,62 @@
 <?php
+
 session_start();
 
 require_once __DIR__ . '/../config/config.php';
 require_once SRC_PATH . '/user/u_auth.php';
+require_once SRC_PATH . '/utils/validator.php';
 
 /* roba per css*/
 $backgrounds = [];
-for ($i = 0; $i < 5; $i++) {
+for ($i = 0; $i < 5; $i++)
+{
     $backgrounds[] = '../img/background-' . ($i + 1) . '.jpg';
 }
 $bg = $backgrounds[array_rand($backgrounds)];
 /*--------------*/
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username              = $_POST['email']                 ?? '';
-    $password              = $_POST['password']              ?? '';
-    $password_confirmation = $_POST['password_confirmation'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST')
+{
+    if (empty($_POST['password']) ||
+        empty($_POST['password_confirmation']) ||
+        empty($_POST['email']))
+    {
+        $user_error_message = ('Input fields cannot be empty.');
+    } else
+    {
+        $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
+        if (!empty($error_message))
+        {
+            $password_error_message = $error_message;
+        } else
+        {
+            $email                 = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
+            var_dump($email);
+            if (!$email)
+            {
+                $user_error_message = 'Invalid email format.';
+            } else
+            {
+                $password              = $_POST['password'];
+                $password_confirmation = $_POST['password_confirmation'];
 
-    if ($password !== $password_confirmation) {
-        $password_error_message = 'Passwords do not match.';
-    } else {
-        $rv = USER\signup($mysqli, $username, $password);
+                if ($password !== $password_confirmation)
+                {
+                    $password_error_message[] = 'Password and confirmation do not match.';
+                } else
+                {
+                    $rv = USER\signup($mysqli, $email, $password);
 
-        if ($rv) {
-            header('Location: index.php');
-            exit;
-        } else {
-            $user_error_message = 'User already exists. Try to log in.';
+                    if ($rv)
+                    {
+                        header('Location: index.php');
+                        exit;
+                    } else
+                    {
+                        $user_error_message = 'User already exists. Try to log in.';
+                    }
+                }
+            }
         }
     }
 }
@@ -58,23 +88,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <form action="signup.php" method="post" class="login-form">
                     <p>
                         <label for="email">Email</label>
-                        <input id="email" tabindex="1" autofocus="autofocus" type="email" name="email" required>
+                        <input id="email" tabindex="1" autofocus="autofocus" type="email" name="email" 
+                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                         <?php if (!empty($user_error_message)): ?>
-                            <span id="user-error" class="error_message">
+                            <span id="user-error" class="error-message">
                                 <?= htmlspecialchars($user_error_message) ?>
                             </span>
                         <?php endif; ?>
                     </p>
                     <p>
                         <label for="password">Password</label>
-                        <input id="password" tabindex="2" type="password" name="password" required>
+                        <div class="input-wrapper">
+                            <input id="password" type="password" name="password" required>
+                            <button type="button" class="toggle-password">
+                                <img src="../assets/img/mostra.png" alt="Show password">
+                            </button>
+                        </div>
+                    </p>
+                    <p>
+                        <button id="generate-password" type="button" class="button-secondary">
+                            Suggest a strong password
+                        </button>
                     </p>
                     <p>
                         <label for="password_confirmation">Password Confirmation</label>
-                        <input id="password_confirmation" tabindex="3" type="password" name="password_confirmation" required>
-                        <span id="password-error" style="color: red; font-size: 14px; display: none;">
-                            Passwords do not match
-                        </span>
+                        <div class="input-wrapper">
+                            <input id="password_confirmation" type="password" name="password_confirmation" required>
+                            <button type="button" class="toggle-password">
+                                <img src="../assets/img/mostra.png" alt="Show password">
+                            </button>
+                        </div>
+                        <?php if (!empty($password_error_message)): ?>
+                            <span id="password-error" class="error-message">
+                                <?php foreach ($password_error_message as $msg): ?>
+                                    <?= htmlspecialchars($msg) ?><br>
+                                <?php endforeach; ?>
+                            </span>
+                        <?php endif; ?>
+                        <ul id="password-checklist" class="password-rules">
+                            Please choose a password with:
+                            <li id="rule-length">At least 12 characters</li>
+                            <li id="rule-lower">At least one lowercase letter</li>
+                            <li id="rule-upper">At least one uppercase letter</li>
+                            <li id="rule-number">At least one number</li>
+                            <li id="rule-symbol">At least one symbol in <br>
+                                ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~</li>
+                        </ul>
+
                     </p>
                     <p>
                         <input type="submit" value="Create" class="button-primary">
@@ -93,20 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
     </div>
-    <script>
-    const form = document.querySelector(".login-form");
-    const password = document.getElementById("password");
-    const confirm = document.getElementById("password_confirmation");
-    const error = document.getElementById("password-error");
-
-    form.addEventListener("submit", function (e) {
-        if (password.value !== confirm.value) {
-            e.preventDefault(); 
-            error.style.display = "block"; 
-        } else {
-            error.style.display = "none";
-        }
-    });
-    </script>
+    <script src="../assets/js/password-tools.js"></script>
 </body>
 </html>

@@ -6,7 +6,8 @@ require_once SRC_PATH . '/user/u_auth.php';
 $user = \USER\current_user($mysqli);
 
 $backgrounds = [];
-for ($i = 0; $i < 5; $i++) {
+for ($i = 0; $i < 5; $i++)
+{
     $backgrounds[] = '../img/background-' . ($i + 1) . '.jpg';
 }
 $bg = $backgrounds[array_rand($backgrounds)];
@@ -57,7 +58,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
         <!-- MAIN -->
         <div id="main" style="--bg-image: url('<?php echo $bg; ?>');">
             <?php if ($user): ?>
-                <h2>Hello, <?php echo htmlspecialchars($user['username']); ?>!</h2>
+                <h2>Hello, <?php echo htmlspecialchars($user['email']); ?>!</h2>
                 <p>Welcome to your personal area.</p>
             <?php else: ?>
                 <h2>Hello, Guest!</h2>

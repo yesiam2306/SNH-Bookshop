@@ -6,25 +6,35 @@ require_once SRC_PATH . '/user/u_auth.php';
 
 /* roba per css*/
 $backgrounds = [];
-for ($i = 0; $i < 5; $i++) {
+for ($i = 0; $i < 5; $i++)
+{
     $backgrounds[] = '../img/background-' . ($i + 1) . '.jpg';
 }
 $bg = $backgrounds[array_rand($backgrounds)];
 /*--------------*/
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username    = $_POST['email']    ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST')
+{
+    $email    = $_POST['email']    ?? '';
     $password    = $_POST['password'] ?? '';
     $remember_me = isset($_POST['remember']) ? true : false;
 
-    $rv = USER\login($mysqli, $username, $password, $remember_me);
+    $rv = USER\login($mysqli, $email, $password, $remember_me);
 
-    if ($rv) {
+    if ($rv)
+    {
         header('Location: index.php');
         exit;
-    } else {
+    } else
+    {
         $error_message = 'Invalid email or password.';
     }
+}
+
+if (true)
+{
+    echo "ok";
 }
 
 ?>

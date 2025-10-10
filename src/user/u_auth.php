@@ -5,6 +5,7 @@ namespace USER;
 require_once __DIR__ . '/../../config/config.php';
 require_once DBM_PATH . '/users.php';
 require_once DBM_PATH . '/session.php';
+require_once DBM_PATH . '/quarantine.php';
 require_once SRC_PATH . '/utils/log.php';
 
 /**
@@ -86,10 +87,11 @@ function login($mysqli, $email, $password, $remember_me = false)
     if (!$salt)
     {
         $msg = "Invalid salt for user $email";
-        debug($msg);
+        // debug($msg);
         $msg = 'DB connection failed';
         log_error($msg);
-        die($msg);
+        // die($msg);
+        return;
     }
 
     $passhash = hash('sha256', $salt['salt'] . $password);
@@ -97,10 +99,10 @@ function login($mysqli, $email, $password, $remember_me = false)
     $rv = \DBM\login($mysqli, $email, $passhash);
     if (!$rv)
     {
-        $msg = "Invalid credentials for email $email";
+        $msg = "Invalid credentials for email {$email}";
         log_warning($msg);
-        // TODO: credo che qui vada messa la routine per bloccare l'utente dopo N tentativi falliti
-        return null;
+        handle_quarantine($mysqli, $_SERVER['REMOTE_ADDR'], $email);
+        return;
     }
 
     log_info("LOGIN - User {$rv['user_id']} logged in successfully");
@@ -110,7 +112,6 @@ function login($mysqli, $email, $password, $remember_me = false)
         generate_token($mysqli, $rv['user_id']);
     }
 
-    session_start();
     session_init($rv['user_id'], $email, $rv['role'], );
     return $rv;
 }
@@ -150,7 +151,7 @@ function generate_token($mysqli, $user_id)
         die();
     } else
     {
-        log_info("LOGIN - Token generated for user_id $user_id");
+        log_info("LOGIN - Token generated for user_id {$user_id}");
     }
 }
 
@@ -166,7 +167,7 @@ function session_init($user_id, $email, $role)
 {
     session_regenerate_id(true);
     $_SESSION['user_id']         = $user_id;
-    $_SESSION['email']        = $email;
+    $_SESSION['email']           = $email;
     $_SESSION['role']            = $role;
     $_SESSION['__csrf']          = bin2hex(random_bytes(32));
     $_SESSION['__last_activity'] = time();
@@ -195,7 +196,7 @@ function logout($mysqli)
         debug($msg);
     } else
     {
-        log_info("LOGOUT - User $user_id logged out and tokens deleted");
+        log_info("LOGOUT - User {$user_id} logged out and tokens deleted");
     }
 }
 
@@ -248,8 +249,6 @@ function signup($mysqli, $email, $password)
         return null;
     }
 
-    var_dump($email);
-
     $rv = \DBM\insertUser($mysqli, $email, $passhash, $salt);
     if (!$rv)
     {
@@ -260,4 +259,119 @@ function signup($mysqli, $email, $password)
 
     log_info("SIGNUP - User $email registered successfully");
     return login($mysqli, $email, $password, false);
+}
+
+function check_ip_attempts($mysqli, $ip)
+{
+    $records = \DBM\getQuarantineByIp($mysqli, $ip);
+    if (!$records)
+    {
+        return true;
+    }
+    $attempts = 0;
+    foreach ($records as $record)
+    {
+        $attempts += $record['attempts'];
+    }
+    if ($attempts >= 3)
+    {
+        $msg = "IP {$ip} attempted {$attempts} times for different emails";
+        log_warning($msg);
+        return false;
+    }
+    return true;
+}
+
+function check_email_attempts($mysqli, $email)
+{
+    $records = \DBM\getQuarantineByEmail($mysqli, $email);
+    if (!$records)
+    {
+        return true;
+    }
+    $attempts = 0;
+    foreach ($records as $record)
+    {
+        $attempts += $record['attempts'];
+    }
+    if ($attempts >= 3)
+    {
+        $msg = "Email {$email} attempted many times from different IPs";
+        log_warning($msg);
+        return false;
+    }
+    return true;
+}
+
+function handle_quarantine($mysqli, $ip, $email)
+{
+    $records = \DBM\getQuarantineByEmail($mysqli, $email);
+    $attempts = 0;
+    foreach ($records as $record)
+    {
+        $attempts += $record['attempts'];
+    }
+
+    $unlock_token = null;
+    $token_hash = null;
+    if ($attempts >= 2)
+    {
+        $unlock_token = bin2hex(random_bytes(32));
+        $token_hash = hash('sha256', $unlock_token);
+    }
+
+    $rv = \DBM\insertQuarantine($mysqli, $ip, $email, $token_hash);
+    if ($rv)
+    {
+        log_info("IP {$ip} inserted in quarantine for email {$email}");
+    }
+
+    // TODO: INVIO EMAIL
+}
+
+function reset_quarantine($mysqli, $ip, $email)
+{
+    $rv = \DBM\deleteQuarantineRecord($mysqli, $ip, $email);
+    if ($rv)
+    {
+        log_info("IP {$ip} removed from quarantine for email {$email}");
+    } else
+    {
+        log_error("Failed to delete quarantine record for email {$email} IP {$ip}");
+    }
+    return $rv;
+}
+
+function unlock_token($mysqli, $ip, $email, $token_hash)
+{
+    $records = \DBM\getQuarantineByEmail($mysqli, $email);
+    if (!$records)
+    {
+        log_warning("UNLOCK - No quarantine records found for email {$email}");
+        return false;
+    }
+
+    $found = false;
+    foreach ($records as $rec)
+    {
+        if ((!empty($rec['unlock_token'])) && hash_equals($rec['unlock_token'], $token_hash))
+        {
+            $found = true;
+            break;
+        }
+    }
+
+    if (!$found)
+    {
+        log_warning("UNLOCK - Token not valid for email {$email} from IP {$ip}");
+        return false;
+    }
+
+    $rv = reset_quarantine($mysqli, $ip, $email);
+    if ($rv)
+    {
+        log_info("UNLOCK - Email {$email} unlocked successfully via unlock token.");
+        return true;
+    }
+    return false;
 }

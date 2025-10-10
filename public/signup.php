@@ -1,10 +1,8 @@
 <?php
-
-session_start();
-
 require_once __DIR__ . '/../config/config.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/validator.php';
+require_once SRC_PATH . '/session_boot.php';
 
 /* roba per css*/
 $backgrounds = [];
@@ -22,6 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         empty($_POST['email']))
     {
         $user_error_message = ('Input fields cannot be empty.');
+    } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
+    {
+        log_error("Invalid request (CSRF check failed).");
+        session_unset();
+        session_destroy();
+        http_response_code(403);
+        exit("Invalid request.");
     } else
     {
         $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
@@ -30,8 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             $password_error_message = $error_message;
         } else
         {
-            $email                 = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
-            var_dump($email);
+            $email = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
             if (!$email)
             {
                 $user_error_message = 'Invalid email format.';
@@ -86,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             <div class="login-container">
                 <h2 class="login-title">Create an Account</h2>
                 <form action="signup.php" method="post" class="login-form">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">
                     <p>
                         <label for="email">Email</label>
                         <input id="email" tabindex="1" autofocus="autofocus" type="email" name="email" 
@@ -153,6 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         </div>
 
     </div>
-    <script src="../assets/js/password-tools.js"></script>
+    <script src="../assets/js/signup-password-tools.js"></script>
 </body>
 </html>

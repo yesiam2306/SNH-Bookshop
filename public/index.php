@@ -4,6 +4,11 @@ require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 
 $user = \USER\current_user($mysqli);
+if (!$user)
+{
+    header('Location: login.php');
+    exit;
+}
 
 $backgrounds = [];
 for ($i = 0; $i < 5; $i++)

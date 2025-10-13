@@ -165,6 +165,11 @@ function generate_token($mysqli, $user_id)
  * __init_ua: user agent iniziale per prevenire hijacking */
 function session_init($user_id, $email, $role)
 {
+    if (session_status() !== PHP_SESSION_ACTIVE)
+    {
+        session_start();
+    }
+
     session_regenerate_id(true);
     $_SESSION['user_id']         = $user_id;
     $_SESSION['email']           = $email;
@@ -374,4 +379,33 @@ function unlock_token($mysqli, $ip, $email, $token_hash)
         return true;
     }
     return false;
+}
+
+function become_premium($mysqli, $email)
+{
+    $rv = \DBM\updateUserRole($mysqli, $email);
+    if (!$rv)
+    {
+        log_error("PREMIUM - Failed to upgrade user {$email}");
+        return false;
+    }
+
+    log_info("PREMIUM - {$email} successfully upgraded to Premium");
+
+    edit_session("Premium");
+
+    return true;
+}
+
+
+function edit_session($role)
+{
+    if (session_status() !== PHP_SESSION_ACTIVE)
+    {
+        session_start();
+    }
+
+    $_SESSION['role']    = $role;
+
+    log_info("SESSION - Session data updated for user {$_SESSION['email']}");
 }

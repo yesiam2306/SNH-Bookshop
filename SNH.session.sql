@@ -57,6 +57,11 @@ CREATE TABLE novels (
     novel_id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    content VARCHAR(255) NOT NULL,
-    premium TINYINT DEFAULT 0
+    is_premium TINYINT DEFAULT 0,
+    is_short TINYINT DEFAULT 1,
+    content VARCHAR(255) NULL,
+    file_original_name VARCHAR(255) NULL,
+    file_stored_name VARCHAR(255) NULL,
+    file_size INT NULL,
+    file_hash VARCHAR(255) NULL
 );

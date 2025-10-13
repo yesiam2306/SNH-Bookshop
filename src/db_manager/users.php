@@ -85,3 +85,18 @@ function login($mysqli, $email, $passhash)
 
     return $result->fetch_assoc();
 }
+
+function updateUserRole($mysqli, $email)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET role = "Premium" WHERE email = ?;');
+    $stmt->bind_param('s', $email);
+    return $stmt->execute();
+}
+
+/* DEBUG */
+function updateUserUser($mysqli, $email)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET role = "User" WHERE email = ?;');
+    $stmt->bind_param('s', $email);
+    return $stmt->execute();
+}

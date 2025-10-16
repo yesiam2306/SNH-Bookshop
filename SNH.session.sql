@@ -9,7 +9,7 @@ CREATE TABLE users (
     salt VARCHAR(32) NOT NULL,
     role ENUM('User', 'Premium', 'Admin') DEFAULT 'User',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 DROP TABLE IF EXISTS session_tokens;
 CREATE TABLE session_tokens (
     selector VARCHAR(50) PRIMARY KEY,
@@ -18,7 +18,7 @@ CREATE TABLE session_tokens (
     expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL 30 DAY),
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     UNIQUE (user_id)
-);
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 INSERT INTO users (email, passhash, salt, role)
 VALUES (
         'a@gmail.com',
@@ -46,7 +46,7 @@ CREATE TABLE quarantine (
     last_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     unlock_token VARCHAR(255) DEFAULT NULL,
     PRIMARY KEY (ip, email)
-);
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 SET GLOBAL event_scheduler = ON;
 DROP EVENT IF EXISTS clean_quarantine;
 CREATE EVENT clean_quarantine ON SCHEDULE EVERY 10 MINUTE DO
@@ -64,4 +64,4 @@ CREATE TABLE novels (
     file_stored_name VARCHAR(255) NULL,
     file_size INT NULL,
     file_hash VARCHAR(255) NULL
-);
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

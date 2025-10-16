@@ -10,10 +10,11 @@ rows.forEach((row) => {
     row.addEventListener('click', () => {
         const t = row.dataset.title;
         const a = row.dataset.email;
+        const p = Number(row.dataset.premium) || 0;
         const c = row.dataset.content;
-        const p = parseInt(row.dataset.premium);
-
-        console.log(t, a, c, p);
+        const l = row.dataset.link;
+        const source_dir = '../uploads/';
+        const link = source_dir.concat(l);
 
         modalTitle.textContent = t;
         modalAuthor.textContent = a;
@@ -31,7 +32,7 @@ rows.forEach((row) => {
             if (!c) {
                 modalBody.innerHTML = `
                     <p style="text-align:center; margin-top:1rem;">
-                        <a href="${c}" download class="download-link">Download PDF</a>
+                        <a href="${link}" download class="download-link">Download PDF</a>
                     </p>
                 `;
             } else {

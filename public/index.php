@@ -14,8 +14,9 @@ if (!$user)
 // require_once DBM_PATH . '/users.php';
 // $rv = \DBM\updateUserUser($mysqli, $user['email']);
 // \USER\edit_session("User");
-// $new_catalog = \USER\create_catalog($mysqli);
+$new_catalog = \USER\create_catalog($mysqli);
 
+// cose per css
 $backgrounds = [];
 for ($i = 0; $i < 5; $i++)
 {
@@ -23,6 +24,7 @@ for ($i = 0; $i < 5; $i++)
 }
 $bg = $backgrounds[array_rand($backgrounds)];
 
+// funzionalità search
 if (isset($_GET['search']) && !empty(trim($_GET['search'])))
 {
     $query = trim($_GET['search']);
@@ -45,7 +47,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SNH Bookshop - Home</title>
+    <title>SNH YourNovel - Home</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
@@ -54,7 +56,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
         <!-- HEADER -->
         <div id="header">
             <div id="header-left">
-                <h1 id="logo">SNH Bookshop</h1>
+                <h1 id="logo">SNH YourNovel</h1>
             </div>
 
                     <div id="header-center">
@@ -87,7 +89,6 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
                 <a href="upload.php" class="button-primary upload-btn">Upload new novel</a>
             </div>
 
-
                 <?php if (!empty($current_novels)): ?>
                     <table class="catalog">
                         <thead>
@@ -104,7 +105,8 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
                                     data-title="<?= htmlspecialchars($n['title']) ?>"
                                     data-email="<?= htmlspecialchars($n['email']) ?>"
                                     data-content="<?= htmlspecialchars($n['content'] ?? '') ?>"
-                                    data-premium="<?= $n['is_premium'] ?>">
+                                    data-link="<?= htmlspecialchars($n['file_stored_name'] ?? '') ?>"
+                                    data-premium="<?= htmlspecialchars($n['is_premium']) ?>">
                                     <td><?= htmlspecialchars($n['title']) ?></td>
                                     <td>
                                         <?php if ($n['is_short']): ?>
@@ -188,7 +190,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
 
         <!-- FOOTER -->
         <div id="footer">
-            <p>&copy; 2025 SNH Bookshop</p>
+            <p>&copy; 2025 SNH YourNovel</p>
         </div>
     </div>
 

@@ -16,6 +16,14 @@ $bg = $backgrounds[array_rand($backgrounds)];
 /*--------------*/
 
 
+$user = \USER\current_user($mysqli);
+if ($user)
+{
+    header('Location: index.php');
+    exit;
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST')
 {
     if (empty($_POST['email']) || empty($_POST['password']))
@@ -62,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SNH Bookshop - Home</title>
+    <title>SNH YourNovel - Home</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
@@ -71,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         <!-- HEADER -->
         <div id="header">
             <div id="logo">
-                <h1>SNH Bookshop</h1>
+                <h1>SNH YourNovel</h1>
             </div>
         </div>
 
@@ -119,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
         <!-- FOOTER -->
         <div id="footer">
-            <p>&copy; 2025 SNH Bookshop</p>
+            <p>&copy; 2025 SNH YourNovel</p>
         </div>
 
     </div>

@@ -22,6 +22,23 @@ function getNovelById($mysqli, $novel_id)
     return $result->fetch_assoc();
 }
 
+function getNovelByTitle($mysqli, $title, $email, $is_short)
+{
+    $stmt = $mysqli->prepare('SELECT COUNT(*) AS c
+                              FROM novels
+                              WHERE title = ? AND email = ? AND is_short = ?');
+    $stmt->bind_param('ssi', $title, $email, $is_short);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if (!$result)
+    {
+        die('Errore nella query: ' . $mysqli->error);
+    }
+
+    return $result->fetch_assoc();
+}
+
 function getContentById($mysqli, $novel_id)
 {
     $stmt = $mysqli->prepare('SELECT content
@@ -56,7 +73,7 @@ function getAllNovels($mysqli)
 
 function getAllNovelsByOthers($mysqli, $email)
 {
-    $stmt = $mysqli->prepare('SELECT title, email, is_short, is_premium, content, file_original_name
+    $stmt = $mysqli->prepare('SELECT title, email, is_short, is_premium, content, file_original_name, file_stored_name
                               FROM novels
                               WHERE email <> ?');
     $stmt->bind_param('s', $email);

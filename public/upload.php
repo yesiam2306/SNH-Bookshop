@@ -1,9 +1,10 @@
 <?php
 
 require_once __DIR__ . '/../config/config.php';
+require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/log.php';
-require_once SRC_PATH . '/utils/error.php';
+require_once SRC_PATH . '/utils/response.php';
 require_once SRC_PATH . '/file/f_upload.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST')
@@ -18,9 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     $title = trim($_POST['title'] ?? '');
     $is_premium = isset($_POST['is_premium']) ? 1 : 0;
     $type = $_POST['type'] ?? '';
+    $is_short = ($type === 'short') ? 1 : 0;
     $content = trim($_POST['content'] ?? '');
 
-    if (!\FILE\check_title($title))
+    if (!\FILE\check_title($mysqli, $title, $user['email'], $is_short))
     {
         header("Location: index.php");
         exit;
@@ -30,7 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         if (!\FILE\check_short_content($content) ||
             !\FILE\new_short_novel($mysqli, $title, $user['email'], $content, $is_premium))
         {
-            header("Location: index.php");
+            $response = \RESP\get_and_reset();
+            $_SESSION['flash'] = $response;
+            header("Location: {$response['redirect']}");
             exit;
         }
 
@@ -44,15 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             die('File upload error');
         }
 
-        var_dump("_FILES['file']", $_FILES['file']);
         $tmp_path = $_FILES['file']['tmp_name'];
-        var_dump("tmp_path", $tmp_path);
         $file_size = $_FILES['file']['size'];
-        var_dump("file_size", $file_size);
         $file_original = basename($_FILES['file']['name']);
-        var_dump("file_original", $file_original);
 
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
 
         $hash = hash_file('sha256', $tmp_path);
 
@@ -117,6 +117,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                 </ul>
             </div>
         </div>
+
+        <!-- <?php if (isset($_SESSION['flash'])):
+            $flash = $_SESSION['flash'];
+            unset($_SESSION['flash']);
+            $is_success = ($flash['code'] == 200);
+            ?>
+        <div class="flash-message <?= $is_success ? 'success' : 'error' ?>">
+            <?= htmlspecialchars($flash['message']) ?>
+        </div>
+        <?php endif; ?> -->
 
         <!-- MAIN -->
         <div id="main">

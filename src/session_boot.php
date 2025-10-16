@@ -11,7 +11,12 @@ session_set_cookie_params([
 ]);
 
 session_start();
-session_regenerate_id(true);
+if (!isset($_SESSION['__initialized']))
+{
+    session_regenerate_id(true);
+    $_SESSION['__initialized'] = true;
+}
+
 
 $TTL = 10 * 60;
 if (isset($_SESSION['__last_activity']) && time() - $_SESSION['__last_activity'] > $TTL)

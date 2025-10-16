@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const counterTitle = document.getElementById('charCounterTitle');
     const maxCharsTitle = 50;
 
-    fileRadio.classList.add('checked');
-
     /*-------------- TOGGLE SHORT / FILE --------------*/
 
     function toggleType() {
@@ -68,16 +66,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /*-------------- CONTATORI --------------*/
-
     if (textarea && counter) {
         textarea.addEventListener('input', () => {
-            const len = textarea.value.length;
+            let len = textarea.value.length;
+            if (len > maxChars) {
+                textarea.value = textarea.value.slice(0, maxChars);
+                len = maxChars;
+            }
             counter.textContent = `${len} / ${maxChars}`;
         });
     }
+
     if (title && counterTitle) {
         title.addEventListener('input', () => {
-            const len = title.value.length;
+            let len = title.value.length;
+            if (len > maxCharsTitle) {
+                title.value = title.value.slice(0, maxCharsTitle);
+                len = maxCharsTitle;
+            }
             counterTitle.textContent = `${len} / ${maxCharsTitle}`;
         });
     }

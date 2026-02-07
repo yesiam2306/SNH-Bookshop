@@ -7,6 +7,7 @@ require_once DBM_PATH . '/users.php';
 require_once DBM_PATH . '/session.php';
 require_once DBM_PATH . '/quarantine.php';
 require_once SRC_PATH . '/utils/log.php';
+require_once SRC_PATH . '/utils/email.php';
 
 /**
  * Restituisce l'utente corrente.
@@ -241,7 +242,7 @@ function token_is_expired($token)
     return (time() > strtotime($token['expires_at']));
 }
 
-function signup($mysqli, $email, $password)
+function signup($mysqli, $email, $password, $role, $token_hash)
 {
     $salt     = bin2hex(random_bytes(16));
     $passhash = hash('sha256', $salt . $password);
@@ -251,19 +252,19 @@ function signup($mysqli, $email, $password)
     {
         $msg = 'SIGNUP - Signup failed because email already exists';
         log_warning($msg);
-        return null;
+        return false;
     }
 
-    $rv = \DBM\insertUser($mysqli, $email, $passhash, $salt);
+    $rv = \DBM\insertUser($mysqli, $email, $passhash, $salt, $role, $token_hash);
     if (!$rv)
     {
         $msg = 'DB connection failed';
         log_error($msg);
-        return null;
+        return false;
     }
 
     log_info("SIGNUP - User $email registered successfully");
-    return login($mysqli, $email, $password, false);
+    return true;
 }
 
 function check_ip_attempts($mysqli, $ip)
@@ -329,9 +330,90 @@ function handle_quarantine($mysqli, $ip, $email)
     if ($rv)
     {
         log_info("IP {$ip} inserted in quarantine for email {$email}");
+    } else
+    {
+        log_error("Failed to insert quarantine record for email {$email} IP {$ip}");
+        return false;
     }
 
-    // TODO: INVIO EMAIL
+    $rv = \EMAIL\send_unlock_email($email, $unlock_token);
+    return $rv;
+}
+
+function check_token($mysqli, $email, $token)
+{
+    $token_hash = hash('sha256', $token);
+    $rv = \DBM\getTokenByEmail($mysqli, $email);
+    if (!$rv)
+    {
+        log_warning("CONFIRM - No token found for email {$email}");
+        return false;
+    }
+
+    $token_stored = $rv['token'];
+    if (hash_equals($token_stored, $token_hash))
+    {
+        log_info("CONFIRM - Token is valid for email {$email}. Account confirmed.");
+        return true;
+    } else
+    {
+        log_warning("CONFIRM - Token is not valid for email {$email}");
+        return false;
+    }
+}
+
+function tokenReset($mysqli, $email, $token_hash)
+{
+    $rv = \DBM\getUserByEmail($mysqli, $email);
+    if (!$rv)
+    {
+        $msg = 'RESET - Token update failed because user does not exist';
+        log_warning($msg);
+        return false;
+    }
+
+    $rv = \DBM\updateUserToken($mysqli, $email, $token_hash);
+    if (!$rv)
+    {
+        $msg = 'DB connection failed';
+        log_error($msg);
+        return false;
+    }
+
+    log_info("RESET - User $email token updated successfully");
+    return true;
+}
+
+function reset_password($mysqli, $email, $password)
+{
+    $salt     = bin2hex(random_bytes(16));
+    $passhash = hash('sha256', $salt . $password);
+
+    $rv = \DBM\getUserByEmail($mysqli, $email);
+    if (!$rv)
+    {
+        $msg = "RESET - Reset failed because user {$email} does not exist";
+        log_warning($msg);
+        return false;
+    }
+
+    if ($rv['role'] === 'Pending')
+    {
+        $msg = "RESET - Reset failed because user {$email} is pending confirmation";
+        log_warning($msg);
+        return false;
+    }
+
+    $rv = \DBM\updateUserPassword($mysqli, $email, $passhash, $salt);
+    if (!$rv)
+    {
+        $msg = 'DB connection failed';
+        log_error($msg);
+        return false;
+    }
+
+    log_info("RESET - Password for user $email updated successfully");
+    return true;
 }
 
 function reset_quarantine($mysqli, $ip, $email)
@@ -383,7 +465,7 @@ function unlock_token($mysqli, $ip, $email, $token_hash)
 
 function become_premium($mysqli, $email)
 {
-    $rv = \DBM\updateUserRole($mysqli, $email);
+    $rv = \DBM\updateUserRole($mysqli, $email, 'Premium');
     if (!$rv)
     {
         log_error("PREMIUM - Failed to upgrade user {$email}");
@@ -393,6 +475,29 @@ function become_premium($mysqli, $email)
     log_info("PREMIUM - {$email} successfully upgraded to Premium");
 
     edit_session("Premium");
+
+    return true;
+}
+
+function confirm($mysqli, $email, $role)
+{
+    $rv = \DBM\updateUserRole($mysqli, $email, $role);
+    if (!$rv)
+    {
+        log_error("CONFIRM - Failed to confirm user {$email}");
+        return false;
+    }
+
+    log_info("CONFIRM - {$email} successfully confirmed with role {$role}");
+
+    edit_session($role);
+
+    $rv = \DBM\resetToken($mysqli, $email);
+    if (!$rv)
+    {
+        log_error("CONFIRM - Failed to reset token for user {$email}");
+        return false;
+    }
 
     return true;
 }

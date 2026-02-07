@@ -34,6 +34,18 @@ function getUserByEmail($mysqli, $email)
     return $result->fetch_assoc();
 }
 
+function getTokenByEmail($mysqli, $email)
+{
+    $stmt = $mysqli->prepare('SELECT token
+                              FROM users
+                              WHERE email = ?');
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    return $result->fetch_assoc();
+}
+
 // function getUsers($mysqli)
 // {
 //     $sql = "SELECT *
@@ -49,10 +61,10 @@ function getUserByEmail($mysqli, $email)
 //     return $result->fetch_assoc();
 // }
 
-function insertUser($mysqli, $email, $passhash, $salt)
+function insertUser($mysqli, $email, $passhash, $salt, $role, $token_hash)
 {
-    $stmt = $mysqli->prepare('INSERT INTO users (email, passhash, salt) VALUES (?, ?, ?)');
-    $stmt->bind_param('sss', $email, $passhash, $salt);
+    $stmt = $mysqli->prepare('INSERT INTO users (email, passhash, salt, role, token) VALUES (?, ?, ?, ?, ?)');
+    $stmt->bind_param('sssss', $email, $passhash, $salt, $role, $token_hash);
     return $stmt->execute();
 }
 
@@ -86,9 +98,30 @@ function login($mysqli, $email, $passhash)
     return $result->fetch_assoc();
 }
 
-function updateUserRole($mysqli, $email)
+function updateUserRole($mysqli, $email, $role)
 {
-    $stmt = $mysqli->prepare('UPDATE users SET role = "Premium" WHERE email = ?;');
+    $stmt = $mysqli->prepare('UPDATE users SET role = ? WHERE email = ?;');
+    $stmt->bind_param('ss', $role, $email);
+    return $stmt->execute();
+}
+
+function updateUserPassword($mysqli, $email, $passhash, $salt)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET passhash = ?, salt = ?, token = NULL WHERE email = ?;');
+    $stmt->bind_param('sss', $passhash, $salt, $email);
+    return $stmt->execute();
+}
+
+function updateUserToken($mysqli, $email, $token_hash)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET token = ? WHERE email = ?;');
+    $stmt->bind_param('ss', $token_hash, $email);
+    return $stmt->execute();
+}
+
+function resetToken($mysqli, $email)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET token = NULL WHERE email = ?;');
     $stmt->bind_param('s', $email);
     return $stmt->execute();
 }

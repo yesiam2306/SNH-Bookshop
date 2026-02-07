@@ -1,85 +1,143 @@
 <?php
 
+namespace EMAIL;
+
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/log.php';
+require_once EMAIL_FILE;
 
-// function send_unlock_email(string $email, string $plain_token): bool
-// {
-//     if (!$email)
-//     {
-//         log_error("send_unlock_email: invalid email provided: $email");
-//         return false;
-//     }
+use PHPMailer\PHPMailer\PHPMailer;
 
-//     // Build unlock link
-//     // Assumes config defines SITE_BASE (e.g. https://localhost or https://your-domain.tld)
-//     // If not present, fallback to relative path
-//     $siteBase = defined('SITE_BASE') ? SITE_BASE : '';
-//     $unlock_link = rtrim($siteBase, '/') . '/public/unlock.php?email=' . urlencode($email) . '&token=' . urlencode($plain_token);
+// ===== funzione base =====
+function send_email(string $subject, string $send_to, string $msg): bool
+{
+    try
+    {
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = MAIL_USERNAME;
+        $mail->Password = MAIL_PASSWORD;
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
 
-//     $subject = 'SNH Bookshop — Account unlock';
-//     $message = <<<EOT
-// Hello,
+        $mail->setFrom('noreply@snhn.com', 'SNH Project');
+        $mail->addAddress($send_to);
 
-// We have detected multiple failed login attempts for the account associated with this email address.
-// If you want to immediately unlock the account, click the link below:
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $msg;
+        $mail->AltBody = strip_tags($msg);
 
-// $unlock_link
+        $mail->send();
+        log_info("Email sent to {$send_to} (subject: {$subject})");
+        return true;
+    } catch (\Exception $e)
+    {
+        log_error("Failed to send email to {$send_to}: " . $e->getMessage());
+        return false;
+    }
+}
 
-// This link is single-use and temporary.
+function send_confirm_email(string $email, string $token): bool
+{
+    $link = SITE_BASE . "/public/confirm.php?email=" . urlencode($email) . "&token=" . urlencode($token);
+    $subject = 'Confirm your SNH account';
+    $message = <<<HTML
+<p>Welcome to <strong>SNH YourNovel Project</strong>!</p>
+<p>Your subscription is almost complete.</p>
+<p>
+To confirm your email address, please click the link below:
+</p>
+<p>
+<a href="{$link}">Confirm your account</a>
+</p>
+<p>
+If you did not create an account, you can safely ignore this email.
+</p>
+<p>
+Regards,<br>
+SNH Bookshop - DDC
+</p>
+HTML;
 
-// Regards,
-// SNH Bookshop - DDC
-// EOT;
+    return send_email($subject, $email, $message);
+}
 
-//     $from = defined('MAIL_FROM') ? MAIL_FROM : 'no-reply@localhost';
-//     $headers  = "From: {$from}\r\n";
-//     $headers .= "MIME-Version: 1.0\r\n";
-//     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-//     // Try to use PHPMailer if available for better deliverability
-//     if (class_exists('PHPMailer\PHPMailer\PHPMailer'))
-//     {
-//         try
-//         {
-//             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-//             // If config provides SMTP settings, use them
-//             if (defined('SMTP_HOST') && SMTP_HOST)
-//             {
-//                 $mail->isSMTP();
-//                 $mail->Host       = SMTP_HOST;
-//                 $mail->SMTPAuth   = !empty(SMTP_USER);
-//                 if (!empty(SMTP_USER))
-//                 {
-//                     $mail->Username = SMTP_USER;
-//                     $mail->Password = SMTP_PASS;
-//                 }
-//                 $mail->SMTPSecure = defined('SMTP_SECURE') ? SMTP_SECURE : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-//                 $mail->Port       = defined('SMTP_PORT') ? SMTP_PORT : 587;
-//             }
-//             $mail->setFrom($from);
-//             $mail->addAddress($email);
-//             $mail->Subject = $subject;
-//             $mail->Body    = $message;
-//             $mail->send();
-//             log_info("Unlock token email (PHPMailer) sent to {$email}");
-//             return true;
-//         } catch (Exception $e)
-//         {
-//             log_error("PHPMailer failed to send unlock email to {$email}: " . $e->getMessage());
-//             // fallback to mail()
-//         }
-//     }
+function send_reset_password(string $email, string $token): bool
+{
+    $link = SITE_BASE . "/public/reset.php?email=" . urlencode($email) . "&token=" . urlencode($token);
 
-//     // Fallback to PHP mail()
-//     $sent = @mail($email, $subject, $message, $headers);
-//     if ($sent)
-//     {
-//         log_info("Unlock token email (mail()) sent to {$email}");
-//         return true;
-//     } else
-//     {
-//         log_error("Failed to send unlock email (mail()) to {$email}");
-//         return false;
-//     }
-// }
+    $subject = 'Reset your SNH password';
+
+    $message = <<<HTML
+<p>Hello,</p>
+
+<p>
+We received a request to reset the password for your
+<strong>SNH YourNovel</strong> account.
+</p>
+
+<p>
+To choose a new password, click the link below:
+</p>
+
+<p>
+<a href="{$link}">Reset your password</a>
+</p>
+
+<p>
+If you did not request a password reset, you can safely ignore this email.
+</p>
+
+<p>
+Regards,<br>
+SNH Bookshop - DDC
+</p>
+HTML;
+
+    return send_email($subject, $email, $message);
+}
+
+
+function send_unlock_email(string $email, string $token): bool
+{
+    $unlock_link = SITE_BASE . "/public/unlock.php?email=" . urlencode($email) . "&token=" . urlencode($token);
+
+    $subject = 'Unlock your SNH account';
+
+    $message = <<<HTML
+<p>Hello,</p>
+
+<p>
+We detected multiple failed login attempts on the account associated with
+<strong>{$email}</strong>.
+</p>
+
+<p>
+If this was you and you want to immediately unlock your account,
+click the link below:
+</p>
+
+<p>
+<a href="{$unlock_link}">Unlock your account</a>
+</p>
+
+<p>
+This link is single-use and temporary.
+</p>
+
+<p>
+If this wasn’t you, we recommend changing your password as soon as possible.
+</p>
+
+<p>
+Regards,<br>
+SNH Bookshop – DDC
+</p>
+HTML;
+
+    return send_email($subject, $email, $message);
+}

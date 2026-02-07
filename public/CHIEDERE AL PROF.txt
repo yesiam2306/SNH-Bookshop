@@ -1,14 +1,11 @@
-
-EMAIL
-
 PAGINA DI PAGAMENTO FAKE
 
 ROBA NON RICHIESTA ESPLICITAMENTE
 sezione my uploads, whishlist, my downloads
 controllo sugli upload duplicati.
 
-XAMPP, DOCKER, POSTMAN, AJAX
-
 messaggi di log troppo esplicativi
     log_warning('PREMIUM - User was already premium');
 
+soluzioni alle challenge 
+se possono servire anche per il progetto, o solo per il pratic

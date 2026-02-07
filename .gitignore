@@ -3,3 +3,5 @@
 /php-cs-fixer.php
 /.prettierrc
 /uploads
+/config/config_private.php
+/vendor

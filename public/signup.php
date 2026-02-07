@@ -49,15 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                     $password_error_message[] = 'Password and confirmation do not match.';
                 } else
                 {
-                    $rv = USER\signup($mysqli, $email, $password);
-
-                    if ($rv)
+                    $unlock_token = bin2hex(random_bytes(32));
+                    $token_hash = hash('sha256', $unlock_token);
+                    $rv = USER\signup($mysqli, $email, $password, 'Pending', $token_hash);
+                    if (!$rv)
                     {
-                        header('Location: index.php');
-                        exit;
+                        // TODO in realtà non è l'unico motivo possibile
+                        $user_error_message = 'User already exists. Try to log in.';
                     } else
                     {
-                        $user_error_message = 'User already exists. Try to log in.';
+                        $rv = \EMAIL\send_confirm_email($email, $unlock_token);
+                        $_SESSION['__signup_ok'] = true;
+                        header('Location: signup_success.php');
+                        exit;
                     }
                 }
             }

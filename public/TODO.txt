@@ -2,7 +2,6 @@
 
 CAPTCHA
 
-EMAIL
 CONFERMA REGISTRAZIONE
 RECUPERO PASSWORD
 UNLOCK QUARANTINE
@@ -12,5 +11,15 @@ testare ooops something went wrong
 in generale vorrei gestire tutti i messaggi e codici. settarli tutti in src se possibile
 mostrarli in un popup verde se è andato tutto bene, rosso se c'è stato qualche problema
 
+mettere gli admin in una tabella a parte
+
+controllare i vari event sul db settando tempi diversi se eseguono correttamente le routine
+
 PULIZIA DI UPLOADS
 ANTIVIRUS
+
+https
+gestione di tutte le uscite, reindirizzamenti ecc
+
+ogni tanto compare una riga di log tipo questa
+2026-02-04 19:39:16 [WARNING] (uid=3) - UNLOCK - Invalid request parameters. Email or token missing. | IP=::1 | UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0

@@ -14,7 +14,7 @@ if (!$user)
 // require_once DBM_PATH . '/users.php';
 // $rv = \DBM\updateUserUser($mysqli, $user['email']);
 // \USER\edit_session("User");
-$new_catalog = \USER\create_catalog($mysqli);
+// $new_catalog = \USER\create_catalog($mysqli);
 
 // cose per css
 $backgrounds = [];
@@ -71,7 +71,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
             <div id="header-right">
                 <ul>
                     <?php if ($user): ?>
-                        <li><a href="profile.php">Profile</a></li>
+                        <li><a href="index.php"><?= htmlspecialchars($user['email']) ?></a></li>
                         <li><a href="logout.php">Logout</a></li>
                     <?php else: ?>
                         <li><a href="login.php">Login</a></li>

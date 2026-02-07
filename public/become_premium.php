@@ -18,7 +18,6 @@ for ($i = 0; $i < 5; $i++)
 }
 $bg = $backgrounds[array_rand($backgrounds)];
 
-// Se è già premium → redirect
 if (strcasecmp($user['role'], 'Premium') === 0)
 {
     log_info("PREMIUM - {$user['email']} was already premium");
@@ -26,7 +25,6 @@ if (strcasecmp($user['role'], 'Premium') === 0)
     exit;
 }
 
-// Aggiorna ruolo nel DB
 $rv = \USER\become_premium($mysqli, $user['email']);
 if (!$rv)
 {

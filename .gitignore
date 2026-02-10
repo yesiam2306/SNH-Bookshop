@@ -2,6 +2,6 @@
 /.php-cs-fixer.cache
 /php-cs-fixer.php
 /.prettierrc
-/uploads
-/config/config_private.php
+/app_data/uploads
+/app_data/config/config_private.php
 /vendor

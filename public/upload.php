@@ -1,19 +1,42 @@
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/log.php';
 require_once SRC_PATH . '/utils/response.php';
 require_once SRC_PATH . '/file/f_upload.php';
 
+if (empty($_SESSION['__csrf']))
+{
+    log_error("CSRF - Missing CSRF token in session for user: " . $_SESSION['email']);
+    header('Location: logout.php');
+    exit;
+}
+
+$user = \USER\current_user($mysqli);
+if (!$user)
+{
+    header('Location: login.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST')
 {
-    $user = \USER\current_user($mysqli);
-    if (!$user)
+    if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0)
     {
-        header('Location: login.php');
+        $max_size = ini_get('post_max_size');
+        http_response_code(400);
+        $error_message = 'Error occurred during file upload. The max file size is 50MB.';
+        \RESP\redirect_with_message($error_message, false, "index.php");
         exit;
+    }
+
+    if (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
+    {
+        log_error("CSRF - Invalid token on role update.");
+        header('Location: logout.php');
+        exit();
     }
 
     $title = trim($_POST['title'] ?? '');
@@ -24,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
     if (!\FILE\check_title($mysqli, $title, $user['email'], $is_short))
     {
-        header("Location: index.php");
+        http_response_code(400);
+        $error_message = 'Invalid title.';
+        \RESP\redirect_with_message($error_message, false, "index.php");
         exit;
     }
     if ($type === 'short')
@@ -32,20 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         if (!\FILE\check_short_content($content) ||
             !\FILE\new_short_novel($mysqli, $title, $user['email'], $content, $is_premium))
         {
-            $response = \RESP\get_and_reset();
-            $_SESSION['flash'] = $response;
-            header("Location: {$response['redirect']}");
+            http_response_code(500);
+            $error_message = 'Internal server error.';
+            \RESP\redirect_with_message($error_message, false, "index.php");
             exit;
         }
 
         log_info("UPLOAD - Short story uploaded by {$user['email']}");
-        header('Location: index.php?upload=success');
+        http_response_code(200);
+        $msg = 'Short story uploaded successfully.';
+        \RESP\redirect_with_message($msg, true, "index.php");
         exit;
     } elseif ($type === 'file')
     {
         if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK)
         {
-            die('File upload error');
+            http_response_code(500);
+            $error_message = 'Internal server error.';
+            \RESP\redirect_with_message($error_message, false, "index.php");
+            exit;
         }
 
         $tmp_path = $_FILES['file']['tmp_name'];
@@ -65,7 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             !\FILE\check_hash($mysqli, $hash, $user['email']) ||
             !\FILE\move_file($tmp_path, $dest))
         {
-            header("Location: index.php");
+            http_response_code(400);
+            $error_message = 'Error occurred during file upload. The max file size is 50MB.';
+            \RESP\redirect_with_message($error_message, false, "index.php");
             exit;
         }
 
@@ -82,16 +114,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         if (!$rv)
         {
             unlink($dest); // cleanup
-            header("Location: index.php");
+            http_response_code(500);
+            $error_message = 'Internal server error.';
+            \RESP\redirect_with_message($error_message, false, "index.php");
             exit;
         }
 
         log_info("UPLOAD - File {$title} uploaded by {$user['email']}");
-        header('Location: index.php?upload=success');
+        http_response_code(200);
+        $msg = 'File uploaded successfully.';
+        \RESP\redirect_with_message($msg, true, "index.php");
         exit;
     } else
     {
-        die('Invalid upload type');
+        http_response_code(400);
+        $msg = 'Invalid upload type.';
+        \RESP\redirect_with_message($msg, false, "index.php");
+        exit;
     }
 }
 ?>
@@ -101,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 <head>
     <meta charset="UTF-8">
     <title>Upload Novel - SNH Bookshop</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <script defer src="../assets/js/upload-form.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/upload-form.js"></script>
 </head>
 <body>
     <div id="container">
@@ -112,8 +151,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             <div id="header-left"><h1 id="logo">SNH Bookshop</h1></div>
             <div id="header-right">
                 <ul>
-                    <li><a href="profile.php">Profile</a></li>
-                    <li><a href="logout.php">Logout</a></li>
+                    <?php if ($user): ?>
+                        <li><a href="index.php"><?= htmlspecialchars($user['email']) ?></a></li>
+                        <li><a href="logout.php">Logout</a></li>
+                    <?php else: ?>
+                        <li><a href="login.php">Login</a></li>
+                        <li><a href="signup.php">Sign up</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -134,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                 <h2>Upload new novel</h2>
 
                 <form id="uploadForm" action="upload.php" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">
                     <div class="form-group">
                         <label for="title">Title <span class="required">*</span></label>
                         <textarea id="title" name="title" rows="1" maxlength="50" required></textarea>

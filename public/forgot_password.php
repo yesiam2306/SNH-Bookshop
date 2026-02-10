@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/log.php';
@@ -12,11 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $user_error_message = ('Input fields cannot be empty.');
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
-        log_error("Invalid request (CSRF check failed).");
-        session_unset();
-        session_destroy();
-        http_response_code(403);
-        exit("Invalid request.");
+        log_error("CSRF - Invalid token on role update.");
+        header('Location: logout.php');
+        exit();
     } else
     {
         $email = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
@@ -29,17 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             $token_hash = hash('sha256', $token);
 
             $rv = USER\tokenReset($mysqli, $email, $token_hash);
-            if (!$rv)
-            {
-                // TODO in realtà non è l'unico motivo possibile
-                $user_error_message = 'User already exists. Try to log in.';
-            } else
+            if ($rv)
             {
                 $rv = \EMAIL\send_reset_password($email, $token);
                 $_SESSION['__forgot_confirmed'] = true;
                 header('Location: forgot_success.php');
                 exit;
             }
+            // todo else
         }
 
     }
@@ -57,7 +52,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
 <head>
     <meta charset="UTF-8">
     <title>Forgot Password - SNH YourNovel</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div id="container">

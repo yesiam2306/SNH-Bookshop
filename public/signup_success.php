@@ -1,10 +1,12 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 
 if (empty($_SESSION['__signup_ok']))
 {
-    header('Location: login.php');
+    http_response_code(500);
+    $error_message = 'Unknown error occurred.';
+    \RESP\redirect_with_message($error_message, false, "signup.php");
     exit;
 }
 
@@ -22,7 +24,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
 <head>
     <meta charset="UTF-8">
     <title>Signup completed - SNH YourNovel</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div id="container">

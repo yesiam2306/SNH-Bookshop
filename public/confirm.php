@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/utils/log.php';
@@ -17,7 +17,8 @@ $bg = $backgrounds[array_rand($backgrounds)];
 if ($_SERVER['REQUEST_METHOD'] !== 'GET')
 {
     http_response_code(405);
-    exit('Not allowed.');
+    $error_message = 'Not allowed.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
 }
 
 $email_raw = $_GET['email'] ?? '';
@@ -28,22 +29,26 @@ $token = is_string($token_raw) ? trim($token_raw) : '';
 
 if (!$email || $token === '')
 {
-    log_warning("CONFIRM - Invalid request parameters.");
-    header('Location: error.php');
-    exit;
+    http_response_code(400);
+    $error_message = 'Bad request.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
 }
 
 if (!\USER\check_token($mysqli, $email, $token))
 {
     log_warning("CONFIRM - Invalid or expired token for {$email}");
-    header('Location: error.php');
+    http_response_code(401);
+    $error_message = 'Invalid or expired token.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
     exit;
 }
 
 if (!\USER\confirm($mysqli, $email, 'User'))
 {
     log_error("CONFIRM - Failed to confirm user {$email}");
-    header('Location: error.php');
+    http_response_code(500);
+    $error_message = 'Internal servererror.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
     exit;
 }
 

@@ -1,10 +1,12 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 
 if (empty($_SESSION['__reset_confirmed']))
 {
-    header('Location: login.php');
+    http_response_code(500);
+    $error_message = 'Unknown error occurred.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
     exit;
 }
 
@@ -23,7 +25,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
 <head>
     <meta charset="UTF-8">
     <title>Password Reset Success - SNH YourNovel</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <meta http-equiv="refresh" content="5;url=login.php">
 </head>
 <body>

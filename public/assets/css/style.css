@@ -1,0 +1,707 @@
+:root {
+  --color-brown-light: #a1887f;
+  --color-brown: #795548;
+  --color-brown-dark: #4b3a2c;
+  --color-beige: #d7ccc8;
+  --color-coffee: #6f4e37;
+  --color-choco: #3e2723;
+  --color-text-dark: #2c2c2c;
+  --color-text-light: #f9f6f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+#container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(#4b3a2c, #6b4f3f);
+  color: #fff;
+  padding: 1rem 2rem;
+}
+
+#logo {
+  margin: 0;
+  font-size: 2rem;
+  white-space: nowrap;
+}
+
+#header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  width: 500px;
+  position: relative;
+}
+
+.search-container input {
+  flex: 1;
+  padding: 0.6rem 2.5rem 0.6rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: "IBM Plex Sans", sans-serif;
+  color: #2c293b;
+}
+
+.search-container button {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.search-container button img {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+.search-container button img:hover {
+  opacity: 1;
+}
+
+#header-right ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+#header-right a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#header-right a:hover {
+  color: #ffcc80;
+}
+
+.novel-row {
+  cursor: pointer;
+}
+
+.novel-row:hover {
+  background-color: #e7dbd6 !important;
+}
+
+.user-row {
+  cursor: pointer;
+}
+
+
+/* Account links */
+#account ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+#account a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+#account a:hover {
+  color: #ffcc80;
+}
+
+/* Footer sempre in basso */
+#footer {
+  background: linear-gradient(#6b4f3f, #4b3a2c);
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+  margin-top: auto;
+}
+
+.login-container {
+  max-width: 450px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  border-top: 4px solid var(--color-brown-dark);
+  border-right: 4px solid var(--color-brown-dark);
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.login-title {
+  font-family: "GT Super Bold", serif;
+  font-size: 28px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.login-form p {
+  margin-bottom: 1rem;
+}
+
+ .login-form label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 15px;
+  color: var(--color-dark-text);
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"],
+.login-form input[type="text"] {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; 
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.remember input {
+  margin-right: 0.4rem;
+}
+
+.button-primary {
+  background-color: var(--color-brown);
+  border: none;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 0.7rem 1.5rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.button-primary:hover {
+  background-color: var(--color-brown-dark);
+  transform: scale(1.02);
+  box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
+}
+
+.login-links {
+  margin-top: 1rem;
+  font-size: 14px;
+  text-align: center;
+}
+
+.login-links a {
+  color: var(--color-brown);
+  text-decoration: none;
+}
+
+.login-links a:hover {
+  text-decoration: underline;
+} 
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  display: block;
+  margin-top: 0.3rem;
+}
+
+ul{
+  padding-left: 1rem;
+}
+
+.password-rules li {
+  color: red;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.password-rules li.ok {
+  color: green;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 35px; 
+  box-sizing: border-box;
+}
+
+.input-wrapper button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.input-wrapper button img {
+    width: 20px;
+    height: 20px;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-password-toggle {
+    display: none !important;
+}
+
+
+
+/* Main (riempie spazio centrale) */
+#main {
+  flex: 1;
+  padding: 2rem;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4)), var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0;
+  /* transform: scale(0.5);  */
+  animation: zoomFadeIn 0.5s ease-out forwards;
+}
+
+.catalog-header {
+  width: 65%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;   /* centra il titolo */
+  align-items: center;
+  position: relative;        /* serve per posizionare l’upload-btn */
+  margin-bottom: 1.5rem;
+}
+
+.userlist-header {
+  width: 65%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;   /* centra il titolo */
+  align-items: center;
+  position: relative;        
+  margin-bottom: 1.5rem;
+}
+
+.upload-btn {
+  position: absolute;
+  right: 0;                  /* sposta il pulsante a destra */
+  text-decoration: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+}
+
+
+@keyframes zoomFadeIn {
+  from {
+    opacity: 0;
+    /* transform: scale(0.5);  */
+  }
+  to {
+    opacity: 1;
+    /* transform: scale(1);  */
+  }
+}
+
+
+/* ------------- INDEX -------------*/
+/* ====== CATALOG TABLE ====== */
+.catalog-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.catalog-container h2 {
+  text-align: center;
+  color: var(--color-brown-dark);
+  margin-bottom: 1.5rem;
+}
+
+table.catalog {
+  width: 65%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: center;
+}
+
+table.catalog th,
+table.catalog td {
+  padding: 0.8rem;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table.catalog th {
+  background-color: var(--color-brown);
+  color: white;
+  font-weight: bold;
+}
+
+table.catalog tr:nth-child(even) {
+  background-color: #f7f3f1;
+}
+
+table.catalog tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table.catalog tr:hover {
+  background-color: #e7dbd6;
+  transition: background-color 0.2s ease-in-out;
+}
+
+table.catalog th:nth-child(1),
+table.catalog td:nth-child(1) {
+  width: 35%;
+}
+
+table.catalog th:nth-child(2),
+table.catalog td:nth-child(2) {
+  width: 10%;
+}
+
+table.catalog th:nth-child(3),
+table.catalog td:nth-child(3) {
+  width: 35%;
+}
+
+table.catalog th:nth-child(4),
+table.catalog td:nth-child(4) {
+  width: 20%;
+}
+
+.novel-row img {
+  width: 25px;
+}
+
+/* ====== USERLIST TABLE ====== */
+.userlist-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.userlist-container h2 {
+  text-align: center;
+  color: var(--color-brown-dark);
+  margin-bottom: 1.5rem;
+}
+
+table.userlist {
+  width: 65%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: center;
+}
+
+table.userlist th,
+table.userlist td {
+  padding: 0.8rem;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table.userlist th {
+  background-color: var(--color-brown);
+  color: white;
+  font-weight: bold;
+}
+
+table.userlist tr:nth-child(even) {
+  background-color: #f7f3f1;
+}
+
+table.userlist tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table.userlist tr:hover {
+  background-color: #e7dbd6;
+  transition: background-color 0.2s ease-in-out;
+}
+
+table.userlist th:nth-child(1),
+table.userlist td:nth-child(1) {
+  width: 30%;
+}
+
+table.userlist th:nth-child(2),
+table.userlist td:nth-child(2) {
+  width: 35%;
+}
+
+table.userlist th:nth-child(3),
+table.userlist td:nth-child(3) {
+  width: 35%;
+}
+
+/* ====== PAGINATION ====== */
+.pagination {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.page-btn {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 0.5rem 0.9rem;
+  background-color: var(--color-brown);
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.page-btn:hover {
+  background-color: var(--color-brown-dark);
+  transform: scale(1.05);
+}
+
+.page-btn.active {
+  background-color: var(--color-brown-dark);
+  cursor: default;
+}
+
+.dots {
+  display: inline-block;
+  margin: 0 6px;
+  color: var(--color-text-dark);
+  font-weight: bold;
+  user-select: none;
+}
+
+/* ====== MODAL ====== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 1.5rem 2rem;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  animation: fadeIn 0.3s ease;
+  text-align: center;
+}
+
+.close-btn {
+  float: right;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-brown-dark);
+}
+
+.close-btn:hover {
+  color: var(--color-brown);
+}
+
+.story-text {
+  background: #f5f2f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: left;
+  max-height: 250px;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 0.95rem;
+}
+
+.download-link, .upgrade-link {
+  display: inline-block;
+  margin-top: 0.8rem;
+  background: var(--color-brown);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.download-link:hover,
+.upgrade-link:hover {
+  background: var(--color-brown-dark);
+}
+
+
+/* UPLOAD */
+.upload-container {
+  max-width: 700px;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+  position: relative;
+}
+
+.form-group label {
+  font-weight: bold;
+  color: var(--color-brown-dark);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.form-group-inline {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.form-group input[type="text"],
+textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.drop-area {
+  border: 2px dashed var(--color-brown-light);
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.drop-area.dragover {
+  background-color: #e0d4ce;
+}
+
+.drop-area p {
+  color: var(--color-brown-dark);
+  margin: 0;
+}
+
+.drop-area input[type="file"] {
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.button-secondary {
+  background-color: #ccc;
+  border: none;
+  color: #333;
+  padding: 0.7rem 1.5rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.button-secondary:hover {
+  background-color: #bbb;
+  transform: scale(1.03);
+}
+
+.hidden {
+  display: none;
+}
+
+#shortStoryBox {
+  position: relative;
+}
+
+.char-counter {
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-size: 0.85em;
+  color: #666;
+}
+
+/*----------- ERROR MSG -----------*/
+.flash-message {
+  text-align: left;
+  padding: 0.8rem 1.2rem;
+  font-weight: bold;
+  border-radius: 5px;
+  width: 100%;
+}
+.flash-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.flash-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}

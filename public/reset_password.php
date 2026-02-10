@@ -1,12 +1,31 @@
+<!-- quando l'utente usa il link ricevuto via email, accede alla pagina tramite una GET passando email e token.
+ la pagina verifica che email e token siano validi e se lo sono mostra il form per inserire la nuova password. 
+ a questo punto la pagina viene chiamata tramite una POST -->
+
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/validator.php';
 
-if (empty($_SESSION['__forgot_confirmed']))
+$email = \VALIDATOR\sanitize_email($_POST['email'] ?? $_GET['email'] ?? '');
+$token = $_POST['token'] ?? $_GET['token'] ?? '';
+
+if (!$email || $token === '')
 {
-    header('Location: index.php');
+    log_warning("RESET - Invalid request parameters.");
+    http_response_code(400);
+    $error_message = 'Bad request.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
+    exit;
+}
+
+if (!\USER\check_token($mysqli, $email, $token))
+{
+    log_warning("Invalid reset token for email: $email");
+    http_response_code(401);
+    $error_message = 'Invalid or expired token.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
     exit;
 }
 
@@ -20,11 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $user_error_message = ('Input fields cannot be empty.');
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
-        log_error("Invalid request (CSRF check failed).");
-        session_unset();
-        session_destroy();
-        http_response_code(403);
-        exit("Invalid request.");
+        log_error("CSRF - Invalid token on role update.");
+        header('Location: logout.php');
+        exit();
     } else
     {
         $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
@@ -80,7 +97,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
 <head>
     <meta charset="UTF-8">
     <title>Reset password - SNH YourNovel</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <meta http-equiv="refresh" content="300;url=login.php">
 </head>
 <body>
@@ -96,14 +113,15 @@ $bg = $backgrounds[array_rand($backgrounds)];
                 <h2 class="login-title">Choose a new password</h2>
                 <form action="reset_password.php" method="post" class="login-form">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['__csrf'] ?? '') ?>">
-                    <input type="hidden" name="email" value="<?= htmlspecialchars($_GET['email'] ?? '') ?>">
+                    <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
+                    <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
 
                     <p>
                         <label for="password">New password</label>
                         <div class="input-wrapper">
                             <input id="password" type="password" name="password" required>
                             <button type="button" class="toggle-password">
-                                <img src="../assets/img/mostra.png" alt="Show password">
+                                <img src="assets/img/mostra.png" alt="Show password">
                             </button>
                         </div>
                     </p>
@@ -113,7 +131,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
                         <div class="input-wrapper">
                             <input id="password_confirmation" type="password" name="password_confirmation" required>
                             <button type="button" class="toggle-password">
-                                <img src="../assets/img/mostra.png" alt="Show password">
+                                <img src="assets/img/mostra.png" alt="Show password">
                             </button>
                         </div>
                     </p>
@@ -142,6 +160,6 @@ $bg = $backgrounds[array_rand($backgrounds)];
         </div>
     </div>
 
-    <script src="../assets/js/signup-password-tools.js"></script>
+    <script src="assets/js/signup-password-tools.js"></script>
 </body>
 </html>

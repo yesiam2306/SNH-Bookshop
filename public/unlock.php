@@ -1,9 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/utils/log.php';
 require_once SRC_PATH . '/utils/validator.php';
+require_once SRC_PATH . '/user/u_auth.php';
 
 // cose per css
 $backgrounds = [];
@@ -16,7 +17,9 @@ $bg = $backgrounds[array_rand($backgrounds)];
 if ($_SERVER['REQUEST_METHOD'] !== 'GET')
 {
     http_response_code(405);
-    exit('Not allowed.');
+    $error_message = 'Not allowed.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
+    exit;
 }
 
 $email_raw = $_GET['email'] ?? '';
@@ -28,7 +31,9 @@ $token = is_string($token_raw) ? trim($token_raw) : '';
 if (!$email || $token === '')
 {
     log_warning("UNLOCK - Invalid request parameters. Email or token missing.");
-    header('Location: index.php');
+    http_response_code(400);
+    $error_message = 'Bad request.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
     exit;
 }
 
@@ -39,10 +44,15 @@ $token_hash = hash('sha256', $token);
 $rv = \USER\unlock_token($mysqli, $ip, $email, $token_hash);
 if ($rv)
 {
-    header('Location: login.php?unlock=1');
+    $msg = 'Your account has been unlocked. Please try logging in again.';
+    \RESP\redirect_with_message($msg, true, "login.php");
+    exit;
 } else
 {
-    header('Location: login.php?unlock=0');
+    http_response_code(403);
+    $error_message = 'Invalid or expired token.';
+    \RESP\redirect_with_message($error_message, false, "login.php");
+    exit;
 }
 
 ?>
@@ -53,7 +63,7 @@ if ($rv)
 <head>
     <meta charset="UTF-8">
     <title>Account unlocked - SNH YourNovel</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <meta http-equiv="refresh" content="5;url=login.php">
 </head>
 <body>

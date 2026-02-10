@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/validator.php';
 require_once SRC_PATH . '/session_boot.php';
+require_once SRC_PATH . '/utils/response.php';
 
 /* roba per css*/
 $backgrounds = [];
@@ -22,11 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $user_error_message = ('Input fields cannot be empty.');
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
-        log_error("Invalid request (CSRF check failed).");
-        session_unset();
-        session_destroy();
-        http_response_code(403);
-        exit("Invalid request.");
+        log_error("CSRF - Invalid token on role update.");
+        header('Location: logout.php');
+        exit();
+        // log_error("Invalid request (CSRF check failed).");
+        // session_unset();
+        // session_destroy();
+        // http_response_code(403);
+        // exit("Invalid request.");
     } else
     {
         $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
@@ -54,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                     $rv = USER\signup($mysqli, $email, $password, 'Pending', $token_hash);
                     if (!$rv)
                     {
-                        // TODO in realtà non è l'unico motivo possibile
+                        // TODO in realtà non è l'unico motivo possibile e inoltre meglio toglierlo per non dare indizi a eventuali attaccanti
                         $user_error_message = 'User already exists. Try to log in.';
                     } else
                     {
@@ -76,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 <head>
     <meta charset="UTF-8">
     <title>SNH Bookshop - Home</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
@@ -91,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
         <!-- MAIN -->
         <div id="main" style="--bg-image: url('<?php echo $bg; ?>');">
+            <?php \RESP\render_flash(); ?>
             <div class="login-container">
                 <h2 class="login-title">Create an Account</h2>
                 <form action="signup.php" method="post" class="login-form">
@@ -110,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                         <div class="input-wrapper">
                             <input id="password" type="password" name="password" required>
                             <button type="button" class="toggle-password">
-                                <img src="../assets/img/mostra.png" alt="Show password">
+                                <img src="assets/img/mostra.png" alt="Show password">
                             </button>
                         </div>
                     </p>
@@ -124,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                         <div class="input-wrapper">
                             <input id="password_confirmation" type="password" name="password_confirmation" required>
                             <button type="button" class="toggle-password">
-                                <img src="../assets/img/mostra.png" alt="Show password">
+                                <img src="assets/img/mostra.png" alt="Show password">
                             </button>
                         </div>
                         <?php if (!empty($password_error_message)): ?>
@@ -162,6 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         </div>
 
     </div>
-    <script src="../assets/js/signup-password-tools.js"></script>
+    <script src="assets/js/signup-password-tools.js"></script>
 </body>
 </html>

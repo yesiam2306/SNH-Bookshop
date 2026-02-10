@@ -1,6 +1,8 @@
+<!-- todo: cancellare -->
+
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 
@@ -41,7 +43,7 @@ if (!$rv)
 <head>
     <meta charset="UTF-8">
     <title>SNH Bookshop - Become Premium</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 <div id="container">
@@ -52,19 +54,15 @@ if (!$rv)
             <h1 id="logo">SNH Bookshop</h1>
         </div>
 
-        <div id="header-center">
-            <form action="index.php" method="get" class="search-container">
-                <input type="text" name="q" placeholder="Search...">
-                <button type="submit">
-                    <img src="../assets/img/search.svg" alt="Search">
-                </button>
-            </form>
-        </div>
-
         <div id="header-right">
             <ul>
-                <li><a href="profile.php">Profile</a></li>
-                <li><a href="logout.php">Logout</a></li>
+                <?php if ($user): ?>
+                    <li><a href="index.php"><?= htmlspecialchars($user['email']) ?></a></li>
+                    <li><a href="logout.php">Logout</a></li>
+                <?php else: ?>
+                    <li><a href="login.php">Login</a></li>
+                    <li><a href="signup.php">Sign up</a></li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>

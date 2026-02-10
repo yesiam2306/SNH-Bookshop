@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
+require_once SRC_PATH . '/admin/a_control.php';
 require_once SRC_PATH . '/user/u_auth.php';
-require_once SRC_PATH . '/user/u_novels.php';
 require_once SRC_PATH . '/utils/response.php';
 
 $user = \USER\current_user($mysqli);
@@ -12,10 +12,18 @@ if (!$user)
     exit;
 }
 
-// require_once DBM_PATH . '/users.php';
-// $rv = \DBM\updateUserUser($mysqli, $user['email']);
-// \USER\edit_session("User");
-// $new_catalog = \USER\create_catalog($mysqli);
+if ($_SESSION['role'] !== 'Admin')
+{
+    log_warning("ADMIN - Access denied to admin.php for user {$_SESSION['email']}");
+    header('Location: index.php');
+    exit;
+}
+
+// todo sicuri che sia da mettere?
+if (empty($_SESSION['__csrf']))
+{
+    $_SESSION['__csrf'] = bin2hex(random_bytes(32));
+}
 
 // cose per css
 $backgrounds = [];
@@ -29,19 +37,19 @@ $bg = $backgrounds[array_rand($backgrounds)];
 if (isset($_GET['search']) && !empty(trim($_GET['search'])))
 {
     $query = trim($_GET['search']);
-    $novels = \USER\search_catalog($mysqli, $user['email'], $query);
+    $users = \ADMIN\search_user($mysqli, $_SESSION['email'], $query);
 } else
 {
-    $novels = \USER\show_catalog($mysqli, $user['email']);
+    $users = \ADMIN\show_users($mysqli, $_SESSION['email']);
 }
 
 // PAGINATION
-$novels_per_page = 20;
+$users_per_page = 20;
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$total_novels = count($novels);
-$total_pages = max(1, ceil($total_novels / $novels_per_page));
-$start_index = ($page - 1) * $novels_per_page;
-$current_novels = array_slice($novels, $start_index, $novels_per_page);
+$total_users = count($users);
+$total_pages = max(1, ceil($total_users / $users_per_page));
+$start_index = ($page - 1) * $users_per_page;
+$current_users = array_slice($users, $start_index, $users_per_page);
 ?>
 
 <!DOCTYPE html>
@@ -52,6 +60,8 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+    
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">
     <div id="container">
 
         <!-- HEADER -->
@@ -61,7 +71,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
             </div>
 
                     <div id="header-center">
-                <form action="index.php" method="get" class="search-container">
+                <form action="admin.php" method="get" class="search-container">
                     <input type="text" name="search" placeholder="Search...">
                     <button type="submit">
                         <img src="assets/img/search.svg" alt="Search">
@@ -72,7 +82,7 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
             <div id="header-right">
                 <ul>
                     <?php if ($user): ?>
-                        <li><a href="index.php"><?= htmlspecialchars($user['email']) ?></a></li>
+                        <li><a href="admin.php"><?= htmlspecialchars($user['email']) ?></a></li>
                         <li><a href="logout.php">Logout</a></li>
                     <?php else: ?>
                         <li><a href="login.php">Login</a></li>
@@ -85,56 +95,29 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
         <!-- MAIN -->
         <div id="main" style="--bg-image: url('<?php echo $bg; ?>');">
             <?php \RESP\render_flash(); ?>
-            
-            <div class="catalog-header">
-                <h2>Novel Catalog</h2>
-                <a href="upload.php" class="button-primary upload-btn">Upload new novel</a>
+        
+            <div class="userlist-header">
+                <h2>Users</h2>
             </div>
 
-                <?php if (!empty($current_novels)): ?>
-                    <table class="catalog">
+                <?php if ($total_users > 0): ?>
+                    <table class="userlist">
                         <thead>
                             <tr>
-                                <th>Title</th>
-                                <th></th>
-                                <th>Author</th>
-                                <th>Premium</th>
+                                <th>User ID</th>
+                                <th>Email</th>
+                                <th>Role</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($current_novels as $n): ?>
-                                <?php
-                                $can_view = (!$n['is_premium'] || $user['role'] === 'Premium') ;
-                                if ($n['is_short'])
-                                {
-                                    $display_content = $can_view ? ($n['content'] ?? '') : 'HIDDEN_PREMIUM';
-                                    $display_link    = '';
-                                } else
-                                {
-                                    $display_content = '';
-                                    $display_link    = $can_view ? ("download_pdf.php?id=" . $n['novel_id']) : 'HIDDEN_PREMIUM';
-                                }
-                                ?>
-                                <tr class="novel-row"
-                                    data-title="<?= htmlspecialchars($n['title']) ?>"
+                            <?php foreach ($current_users as $n): ?>
+                                <tr class="user-row"
+                                    data-user-id="<?= htmlspecialchars($n['user_id']) ?>"
                                     data-email="<?= htmlspecialchars($n['email']) ?>"
-                                    data-content="<?= htmlspecialchars($display_content) ?>"
-                                    data-link="<?= htmlspecialchars($display_link) ?>"
-                                    data-premium="<?= htmlspecialchars($n['is_premium']) ?>">
-                                    <td><?= htmlspecialchars($n['title']) ?></td>
-                                    <td>
-                                        <?php if ($n['is_short']): ?>
-                                            <img src="assets/img/short-story.png" alt="short story">          
-                                        <?php else: ?>
-                                            <img src="assets/img/pdf.png" alt="pdf">    
-                                        <?php endif; ?>
-                                    </td>
+                                    data-role="<?= htmlspecialchars($n['role']) ?>">
+                                    <td><?= htmlspecialchars($n['user_id']) ?></td>
                                     <td><?= htmlspecialchars($n['email']) ?></td>
-                                    <td>
-                                        <?php if ($n['is_premium']): ?>
-                                            <img src="assets/img/premium.png" alt="premium">
-                                        <?php endif; ?>
-                                    </td>
+                                    <td><?= htmlspecialchars($n['role']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -187,17 +170,17 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
                         </div>
                     <?php endif; ?>
                 <?php else: ?>
-                    <p style="text-align:center; color:#555;">No novels available at the moment.</p>
+                    <p style="text-align:center; color:#555;">No users available at the moment.</p>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- MODAL -->
-        <div id="novel-modal" class="modal">
+        <div id="user-modal" class="modal">
             <div class="modal-content">
                 <span class="close-btn">&times;</span>
                 <h3 id="modal-title"></h3>
-                <p><strong>Author:</strong> <span id="modal-author"></span></p>
+                <p><strong>Select New Role:</strong></p>
                 <div id="modal-body"></div>
             </div>
         </div>
@@ -207,10 +190,8 @@ $current_novels = array_slice($novels, $start_index, $novels_per_page);
             <p>&copy; 2025 SNH YourNovel</p>
         </div>
     </div>
+    
+    <script src="assets/js/admin-change-role.js"></script>
 
-    <script>
-    window.userIsPremium = <?= ($user['role'] === 'Premium') ? 1 : 0 ?>;
-    </script>
-    <script src="assets/js/show-content.js"></script>
 </body>
 </html>

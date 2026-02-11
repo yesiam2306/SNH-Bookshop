@@ -16,7 +16,7 @@ function getQuarantineByEmail($mysqli, $email)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -34,7 +34,7 @@ function getQuarantineByIp($mysqli, $ip)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -51,7 +51,7 @@ function getTokenByKey($mysqli, $ip, $email)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();

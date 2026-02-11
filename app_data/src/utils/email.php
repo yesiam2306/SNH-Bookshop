@@ -41,7 +41,7 @@ function send_email(string $subject, string $send_to, string $msg): bool
 
 function send_confirm_email(string $email, string $token): bool
 {
-    $link = SITE_BASE . "/public/confirm.php?email=" . urlencode($email) . "&token=" . urlencode($token);
+    $link = SITE_BASE . "/confirm.php?email=" . urlencode($email) . "&token=" . urlencode($token);
     $subject = 'Confirm your SNH account';
     $message = <<<HTML
 <p>Welcome to <strong>SNH YourNovel Project</strong>!</p>
@@ -67,7 +67,7 @@ HTML;
 
 function send_reset_password(string $email, string $token): bool
 {
-    $link = SITE_BASE . "/public/reset_password.php?email=" . urlencode($email) . "&token=" . urlencode($token);
+    $link = SITE_BASE . "/reset_password.php?email=" . urlencode($email) . "&token=" . urlencode($token);
 
     $subject = 'Reset your SNH password';
 
@@ -103,7 +103,7 @@ HTML;
 
 function send_unlock_email(string $email, string $token): bool
 {
-    $unlock_link = SITE_BASE . "/public/unlock.php?email=" . urlencode($email) . "&token=" . urlencode($token);
+    $unlock_link = SITE_BASE . "/unlock.php?email=" . urlencode($email) . "&token=" . urlencode($token);
 
     $subject = 'Unlock your SNH account';
 

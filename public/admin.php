@@ -19,10 +19,9 @@ if ($_SESSION['role'] !== 'Admin')
     exit;
 }
 
-// todo sicuri che sia da mettere?
+// todo sistemare il controllo. forse la cosa migliore è metterlo all'interno di current_user
 if (empty($_SESSION['__csrf']))
 {
-    $_SESSION['__csrf'] = bin2hex(random_bytes(32));
 }
 
 // cose per css

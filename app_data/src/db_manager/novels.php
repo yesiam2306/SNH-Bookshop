@@ -16,7 +16,7 @@ function getNovelById($mysqli, $novel_id)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();
@@ -33,7 +33,7 @@ function getNovelPDFById($mysqli, $novel_id)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();
@@ -50,7 +50,7 @@ function getNovelByTitle($mysqli, $title, $email, $is_short)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();
@@ -67,7 +67,7 @@ function getContentById($mysqli, $novel_id)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();
@@ -82,7 +82,7 @@ function getAllNovels($mysqli)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -99,7 +99,7 @@ function getAllNovelsByOthers($mysqli, $email)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -117,12 +117,11 @@ function searchNovelsByTitle($mysqli, $email, $query)
 
     if (!$result)
     {
-        die("Errore nella query: " . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
 }
-
 
 function insertShortNovel($mysqli, $title, $email, $content, $is_premium)
 {
@@ -164,7 +163,7 @@ function countFiles($mysqli, $email, $hash)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();

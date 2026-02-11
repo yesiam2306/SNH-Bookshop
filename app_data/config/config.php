@@ -34,6 +34,7 @@ if ($mysqli->connect_error)
 }
 
 // === EMAIL SETTINGS ===
+require_once BASE_PATH . '/app_data/vendor/autoload.php';
 define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_PORT', 587);
 define('MAIL_FROM_NAME', 'SNH Project');

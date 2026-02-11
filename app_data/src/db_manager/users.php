@@ -16,7 +16,7 @@ function getUserById($mysqli, $user_id)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();
@@ -89,7 +89,7 @@ function login($mysqli, $email, $passhash)
 
     if (!$result)
     {
-        die('Errore nella query: ' . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_assoc();

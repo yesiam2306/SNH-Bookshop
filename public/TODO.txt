@@ -1,4 +1,4 @@
-ritestare le 3 email
+sistemare remember me e controllare che non vadano in conflitto i token
     
 controllare i vari event sul db settando tempi diversi se eseguono correttamente le routine
 

@@ -15,7 +15,7 @@ form.addEventListener('submit', function (e) {
         lower: /[a-z]/.test(value),
         upper: /[A-Z]/.test(value),
         number: /[0-9]/.test(value),
-        symbol: /[!@#$%()[\\\]{}_+-*/=;:,.?]/.test(value),
+        symbol: /[!@#$%()[\]{}_+\-*/=;:,.?\\]/.test(value),
     };
 
     if (password.value !== confirm.value) {
@@ -43,7 +43,7 @@ function updateChecklist(value) {
         lower: /[a-z]/.test(value),
         upper: /[A-Z]/.test(value),
         number: /[0-9]/.test(value),
-        symbol: /[!@#$%()[\\\]{}_+-*/=;:,.?]/.test(value),
+        symbol: /[!@#$%()[\]{}_+\-*/=;:,.?\\]/.test(value),
     };
 
     for (let rule in rules) {
@@ -60,7 +60,7 @@ function generatePassword(length = 16) {
     const lower = 'abcdefghijklmnopqrstuvwxyz';
     const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numbers = '0123456789';
-    const symbols = '!@#$%()[\\\]{}_+-*/=;:,.?';
+    const symbols = '!@#$%()[\]{}_+\-*/=;:,.?\\';
 
     const all = lower + upper + numbers + symbols;
 

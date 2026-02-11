@@ -18,7 +18,7 @@ function getUsersForAdmin($mysqli, $email)
 
     if (!$result)
     {
-        die("Errore nella query: " . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -43,7 +43,7 @@ function searchUserByEmail($mysqli, $email, $query)
 
     if (!$result)
     {
-        die("Errore nella query: " . $mysqli->error);
+        log_error("DB Error: " . $mysqli->error);
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);

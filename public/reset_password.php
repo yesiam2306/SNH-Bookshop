@@ -7,6 +7,7 @@ require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/validator.php';
+require_once SRC_PATH . '/utils/response.php';
 
 $email = \VALIDATOR\sanitize_email($_POST['email'] ?? $_GET['email'] ?? '');
 $token = $_POST['token'] ?? $_GET['token'] ?? '';

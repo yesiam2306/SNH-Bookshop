@@ -5,6 +5,7 @@ require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/utils/log.php';
 require_once SRC_PATH . '/utils/validator.php';
+require_once SRC_PATH . '/utils/response.php';
 
 // cose per css
 $backgrounds = [];

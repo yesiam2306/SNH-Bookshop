@@ -5,6 +5,7 @@ require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/file/f_upload.php';
 require_once SRC_PATH . '/utils/log.php';
+require_once SRC_PATH . '/utils/response.php';
 
 $user = \USER\current_user($mysqli);
 if (!$user)

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/admin/a_control.php';
 require_once SRC_PATH . '/user/u_auth.php';
+require_once SRC_PATH . '/utils/response.php';
 
 if ($_SESSION['role'] !== 'Admin')
 {

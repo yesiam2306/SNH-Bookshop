@@ -19,11 +19,6 @@ if ($_SESSION['role'] !== 'Admin')
     exit;
 }
 
-// todo sistemare il controllo. forse la cosa migliore è metterlo all'interno di current_user
-if (empty($_SESSION['__csrf']))
-{
-}
-
 // cose per css
 $backgrounds = [];
 for ($i = 0; $i < 5; $i++)

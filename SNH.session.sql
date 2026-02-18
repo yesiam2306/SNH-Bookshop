@@ -2,48 +2,36 @@ DROP DATABASE IF EXISTS SNH_Proj;
 CREATE DATABASE SNH_Proj;
 USE SNH_Proj;
 SET GLOBAL event_scheduler = ON;
-SET @PENDING_TTL_MINUTES := 10;
-SET @QUARANTINE_TTL_MINUTES := 10;
-SET @PASSWORD_RESET_TTL_MINUTES := 10;
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     passhash VARCHAR(255) NOT NULL,
-    salt VARCHAR(32) NOT NULL,
     role ENUM('User', 'Premium', 'Admin', 'Pending') DEFAULT 'User',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     token VARCHAR(255) DEFAULT NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 DROP EVENT IF EXISTS clean_pending_users;
-CREATE EVENT clean_pending_users ON SCHEDULE EVERY @PENDING_TTL_MINUTES MINUTE DO
+CREATE EVENT clean_pending_users ON SCHEDULE EVERY 10 MINUTE DO
 DELETE FROM users
 WHERE role = 'Pending'
-    AND created_at < (NOW() - INTERVAL @PENDING_TTL_MINUTES MINUTE);
+    AND created_at < (NOW() - INTERVAL 10 MINUTE);
 DROP EVENT IF EXISTS clean_password_resets;
-CREATE EVENT clean_password_resets ON SCHEDULE EVERY @PASSWORD_RESET_TTL_MINUTES MINUTE DO
+CREATE EVENT clean_password_resets ON SCHEDULE EVERY 10 MINUTE DO
 UPDATE users
 SET token = NULL
 WHERE token IS NOT NULL
     AND role <> 'Pending';
-INSERT INTO users (email, passhash, salt, role)
+INSERT INTO users (email, passhash, role)
 VALUES (
         'a@gmail.com',
-        SHA2(
-            CONCAT('1111222233334444', 'a'),
-            256
-        ),
-        '1111222233334444',
+        '$2y$10$HFqGYzVAgjc1Y1P9D/xA2eNQTLR6vMU8W2krJAbVE0mvaI5c4lwHq',
         'Admin'
     ),
     (
         'b@gmail.com',
-        SHA2(
-            CONCAT('1111222233334445', 'b'),
-            256
-        ),
-        '1111222233334445',
-        'Admin'
+        '$2y$10$vIHYdei3NLVGWtruFBga1OQMuKKfLpngohMsEQm73msDJSPx6FzpW',
+        'User'
     );
 DROP TABLE IF EXISTS session_tokens;
 CREATE TABLE session_tokens (
@@ -57,16 +45,16 @@ CREATE TABLE session_tokens (
 DROP TABLE IF EXISTS quarantine;
 CREATE TABLE quarantine (
     ip VARCHAR(45) NOT NULL,
-    email VARCHAR (255) NOT NULL,
+    email VARCHAR (255) NULL,
     attempts INT DEFAULT 1,
     last_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     unlock_token VARCHAR(255) DEFAULT NULL,
     PRIMARY KEY (ip, email)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 DROP EVENT IF EXISTS clean_quarantine;
-CREATE EVENT clean_quarantine ON SCHEDULE EVERY @QUARANTINE_TTL_MINUTES MINUTE DO
+CREATE EVENT clean_quarantine ON SCHEDULE EVERY 10 MINUTE DO
 DELETE FROM quarantine
-WHERE last_attempt < (NOW() - INTERVAL @QUARANTINE_TTL_MINUTES MINUTE);
+WHERE last_attempt < (NOW() - INTERVAL 10 MINUTE);
 DROP TABLE IF EXISTS novels;
 CREATE TABLE novels (
     novel_id INT AUTO_INCREMENT PRIMARY KEY,

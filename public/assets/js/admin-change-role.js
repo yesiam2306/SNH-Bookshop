@@ -49,7 +49,7 @@ rows.forEach((row) => {
         modalBody.querySelectorAll('.role-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
                 selectedRole = btn.dataset.role;
-                newRoleInput.value = selectedRole; // Aggiorna l'input nascosto
+                newRoleInput.value = selectedRole;
 
                 modalBody.querySelectorAll('.role-btn').forEach((b) => {
                     b.classList.replace('button-primary', 'button-secondary');

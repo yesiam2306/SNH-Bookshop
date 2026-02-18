@@ -53,27 +53,22 @@ $full_path = UPLOAD_DIR . DIRECTORY_SEPARATOR . $stored_name;
 
 if (file_exists($full_path))
 {
-    // todo Pulizia dell'output buffer per evitare corruzioni del PDF
+    // Pulizia dell'output buffer per evitare corruzioni del PDF
     if (ob_get_level())
     {
         ob_end_clean();
     }
 
     header('Content-Type: application/pdf');
-    header('Content-Disposition: attachment; filename="' . addslashes($novel['file_original_name']) . '"');
+    $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', $novel['file_original_name']);
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Content-Length: ' . filesize($full_path));
-    header('Cache-Control: private, max-age=0, must-revalidate');
-    header('Pragma: public');
 
     readfile($full_path);
     exit;
 } else
 {
     log_error("FILE ACCESS - File {$stored_name} not found");
-
-    // todo
-    header_remove('Content-Type');
-    header_remove('Content-Disposition');
 
     http_response_code(404);
     $error_message = 'File not found.';

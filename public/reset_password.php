@@ -36,8 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         empty($_POST['password_confirmation']) ||
         empty($_POST['email']))
     {
-        // todo email va gestita diversamente.
-        $user_error_message = ('Input fields cannot be empty.');
+        http_response_code(400);
+        $error_message = 'Empty fields.';
+        \RESP\redirect_with_message($error_message, false, "reset_password.php");
+        exit;
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
         log_error("CSRF - Invalid token on role update.");
@@ -48,13 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
         if (!empty($error_message))
         {
-            $password_error_message = $error_message;
+            $password_error_message = $error_message[0];
+            \RESP\redirect_with_message($password_error_message, false, "reset_password.php");
+            exit;
         } else
         {
             $email = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
             if (!$email)
             {
                 $user_error_message = 'Invalid email format.';
+                http_response_code(400);
+                \RESP\redirect_with_message($user_error_message, false, "reset_password.php");
+                exit;
             } else
             {
                 $password              = $_POST['password'];
@@ -62,14 +69,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
 
                 if ($password !== $password_confirmation)
                 {
-                    $password_error_message[] = 'Password and confirmation do not match.';
+                    $password_error_message = 'Password and confirmation do not match.';
+                    \RESP\redirect_with_message($password_error_message, false, "reset_password.php");
+                    exit;
                 } else
                 {
                     $rv = USER\reset_password($mysqli, $email, $password);
                     if (!$rv)
                     {
-                        // TODO in realtà non è l'unico motivo possibile
-                        $user_error_message = 'User already exists. Try to log in.';
+                        $user_error_message = 'Internal error. Please try again later.';
+                        http_response_code(500);
+                        \RESP\redirect_with_message($user_error_message, false, "reset_password.php");
+                        exit;
                     } else
                     {
                         unset($_SESSION['__forgot_confirmed']);
@@ -99,7 +110,6 @@ $bg = $backgrounds[array_rand($backgrounds)];
     <meta charset="UTF-8">
     <title>Reset password - SNH YourNovel</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <meta http-equiv="refresh" content="300;url=login.php">
 </head>
 <body>
     <div id="container">
@@ -110,6 +120,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
         </div>
 
         <div id="main" style="--bg-image: url('<?php echo $bg; ?>');">
+            <?php \RESP\render_flash(); ?>
             <div class="login-container">
                 <h2 class="login-title">Choose a new password</h2>
                 <form action="reset_password.php" method="post" class="login-form">
@@ -137,12 +148,15 @@ $bg = $backgrounds[array_rand($backgrounds)];
                         </div>
                     </p>
 
-                    <ul class="password-rules">
+                    
+                    <ul id="password-checklist" class="password-rules">
+                        Please choose a password with:
                         <li id="rule-length">At least 12 characters</li>
-                        <li id="rule-lower">Contains lowercase letters</li>
-                        <li id="rule-upper">Contains uppercase letters</li>
-                        <li id="rule-number">Contains digits</li>
-                        <li id="rule-symbol">Contains symbols</li>
+                        <li id="rule-lower">At least one lowercase letter</li>
+                        <li id="rule-upper">At least one uppercase letter</li>
+                        <li id="rule-number">At least one number</li>
+                        <li id="rule-symbol">At least one symbol in <br>
+                            ! @ # $ % ( ) [ ] { } _ + - * = ; : , . ? \</li>
                     </ul>
 
                     <p>

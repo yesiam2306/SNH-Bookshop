@@ -16,7 +16,7 @@ function getUserById($mysqli, $user_id)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getUserById");
     }
 
     return $result->fetch_assoc();
@@ -36,7 +36,7 @@ function getUserByUsername($mysqli, $username)
 
 function getUserByEmail($mysqli, $email)
 {
-    $stmt = $mysqli->prepare('SELECT user_id, email, role
+    $stmt = $mysqli->prepare('SELECT user_id, email, role, passhash
                               FROM users
                               WHERE email = ?');
     $stmt->bind_param('s', $email);
@@ -58,23 +58,11 @@ function getTokenByEmail($mysqli, $email)
     return $result->fetch_assoc();
 }
 
-function insertUser($mysqli, $email, $passhash, $salt, $role, $token_hash)
+function insertUser($mysqli, $email, $passhash, $role, $token_hash)
 {
-    $stmt = $mysqli->prepare('INSERT INTO users (email, passhash, salt, role, token) VALUES (?, ?, ?, ?, ?)');
-    $stmt->bind_param('sssss', $email, $passhash, $salt, $role, $token_hash);
+    $stmt = $mysqli->prepare('INSERT INTO users (email, passhash, role, token) VALUES (?, ?, ?, ?)');
+    $stmt->bind_param('ssss', $email, $passhash, $role, $token_hash);
     return $stmt->execute();
-}
-
-
-function getSalt($mysqli, $email)
-{
-    $stmt = $mysqli->prepare('SELECT salt 
-                              FROM users 
-                              WHERE email = ?');
-    $stmt->bind_param('s', $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    return $result->fetch_assoc();
 }
 
 function login($mysqli, $email, $passhash)
@@ -89,7 +77,7 @@ function login($mysqli, $email, $passhash)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: login");
     }
 
     return $result->fetch_assoc();
@@ -102,10 +90,17 @@ function updateUserRole($mysqli, $user_id, $role)
     return $stmt->execute();
 }
 
-function updateUserPassword($mysqli, $email, $passhash, $salt)
+function updateUserRoleByEmail($mysqli, $email, $role)
 {
-    $stmt = $mysqli->prepare('UPDATE users SET passhash = ?, salt = ?, token = NULL WHERE email = ?;');
-    $stmt->bind_param('sss', $passhash, $salt, $email);
+    $stmt = $mysqli->prepare('UPDATE users SET role = ? WHERE email = ?;');
+    $stmt->bind_param('ss', $role, $email);
+    return $stmt->execute();
+}
+
+function updateUserPassword($mysqli, $email, $passhash)
+{
+    $stmt = $mysqli->prepare('UPDATE users SET passhash = ?, token = NULL WHERE email = ?;');
+    $stmt->bind_param('ss', $passhash, $email);
     return $stmt->execute();
 }
 

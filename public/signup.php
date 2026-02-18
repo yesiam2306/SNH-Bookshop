@@ -5,6 +5,13 @@ require_once SRC_PATH . '/utils/validator.php';
 require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/utils/response.php';
 
+$user = \USER\current_user($mysqli);
+if ($user)
+{
+    header('Location: index.php');
+    exit;
+}
+
 /* roba per css*/
 $backgrounds = [];
 for ($i = 0; $i < 5; $i++)
@@ -20,17 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         empty($_POST['password_confirmation']) ||
         empty($_POST['email']))
     {
-        $user_error_message = ('Input fields cannot be empty.');
+        http_response_code(400);
+        $error_message = 'Empty fields.';
+        \RESP\redirect_with_message($error_message, false, "signup.php");
+        exit;
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
         log_error("CSRF - Invalid token on role update.");
         header('Location: logout.php');
         exit();
-        // log_error("Invalid request (CSRF check failed).");
-        // session_unset();
-        // session_destroy();
-        // http_response_code(403);
-        // exit("Invalid request.");
     } else
     {
         $error_message = \VALIDATOR\validate_password($_POST['password'] ?? '', $_POST['email'] ?? '');
@@ -53,13 +58,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                     $password_error_message[] = 'Password and confirmation do not match.';
                 } else
                 {
+                    if (!\USER\handle_quarantine_signup($mysqli, $_SERVER['REMOTE_ADDR']))
+                    {
+                        http_response_code(500);
+                        $error_message = 'Internal error. Please try again later.';
+                        \RESP\redirect_with_message($error_message, false, "signup.php");
+                        exit;
+                    }
                     $unlock_token = bin2hex(random_bytes(32));
                     $token_hash = hash('sha256', $unlock_token);
                     $rv = USER\signup($mysqli, $email, $password, 'Pending', $token_hash);
                     if (!$rv)
                     {
-                        // TODO in realtà non è l'unico motivo possibile e inoltre meglio toglierlo per non dare indizi a eventuali attaccanti
-                        $user_error_message = 'User already exists. Try to log in.';
+                        $user_error_message = 'Internal error. Please try again later.';
                     } else
                     {
                         $rv = \EMAIL\send_confirm_email($email, $unlock_token);
@@ -146,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                             <li id="rule-upper">At least one uppercase letter</li>
                             <li id="rule-number">At least one number</li>
                             <li id="rule-symbol">At least one symbol in <br>
-                                ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~</li>
+                                ! @ # $ % ( ) [ ] { } _ + - * = ; : , . ? \</li>
                         </ul>
 
                     </p>

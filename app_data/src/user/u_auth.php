@@ -84,31 +84,36 @@ function get_token($mysqli, $cookie)
  * Restituisce i dati dell'utente loggato. */
 function login($mysqli, $email, $password, $remember_me = false)
 {
-    $salt = \DBM\getSalt($mysqli, $email);
-    if (!$salt)
-    {
-        $msg = "Invalid salt for user $email";
-        // debug($msg);
-        $msg = 'DB connection failed';
-        log_error($msg);
-        return;
-    }
+    $user = \DBM\getUserByEmail($mysqli, $email);
 
-    $passhash = hash('sha256', $salt['salt'] . $password);
-
-    $rv = \DBM\login($mysqli, $email, $passhash);
-    if (!$rv)
+    if (!$user)
     {
         $msg = "Invalid credentials for email {$email}";
         log_warning($msg);
-        handle_quarantine($mysqli, $_SERVER['REMOTE_ADDR'], $email);
-        return false;
+        handle_quarantine_login($mysqli, $_SERVER['REMOTE_ADDR'], $email);
+        return null;
     }
 
-    log_info("LOGIN - User {$rv['user_id']} logged in successfully");
+    if (!password_verify($password, $user['passhash']))
+    {
+        $msg = "Invalid credentials for email {$email}";
+        log_warning($msg);
+        handle_quarantine_login($mysqli, $_SERVER['REMOTE_ADDR'], $email);
+        return null;
+    }
 
-    session_init($rv['user_id'], $email, $rv['role']);
-    return $rv && ($remember_me ? generate_token($mysqli, $rv['user_id']) : true);
+    log_info("LOGIN - User {$user['user_id']} logged in successfully");
+
+    session_init($user['user_id'], $email, $user['role']);
+    if ($remember_me)
+    {
+        if (!generate_token($mysqli, $user['user_id']))
+        {
+            log_error("LOGIN - Failed to generate remember_me token for user {$user['user_id']}");
+            return null;
+        }
+    }
+    return $user;
 }
 
 
@@ -131,9 +136,9 @@ function generate_token($mysqli, $user_id)
         [
             'expires'  => time() + 30 * 24 * 60 * 60, // 1 mese
             'path'     => '/',
-            'secure'   => isset($_SERVER['HTTPS']),
+            'secure'   => true,
             'httponly' => true,
-            'samesite' => 'Lax'
+            'samesite' => 'Strict'
         ]
     );
 
@@ -207,9 +212,9 @@ function clear_remember_cookie()
     setcookie('remember_me', '', [
         'expires'  => time() - 3600,
         'path'     => '/',
-        'secure'   => isset($_SERVER['HTTPS']),
+        'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Lax'
+        'samesite' => 'Strict'
     ]);
 }
 
@@ -226,7 +231,7 @@ function clear_session()
             'domain'   => $params['domain'],
             'secure'   => $params['secure'],
             'httponly' => $params['httponly'],
-            'samesite' => 'Lax'
+            'samesite' => 'Strict'
         ]);
     }
     session_destroy();
@@ -239,9 +244,6 @@ function token_is_expired($token)
 
 function signup($mysqli, $email, $password, $role, $token_hash)
 {
-    $salt     = bin2hex(random_bytes(16));
-    $passhash = hash('sha256', $salt . $password);
-
     $rv = \DBM\getUserByEmail($mysqli, $email);
     if ($rv)
     {
@@ -250,7 +252,9 @@ function signup($mysqli, $email, $password, $role, $token_hash)
         return false;
     }
 
-    $rv = \DBM\insertUser($mysqli, $email, $passhash, $salt, $role, $token_hash);
+    $passhash = password_hash($password, PASSWORD_BCRYPT);
+
+    $rv = \DBM\insertUser($mysqli, $email, $passhash, $role, $token_hash);
     if (!$rv)
     {
         $msg = 'DB connection failed';
@@ -274,7 +278,7 @@ function check_ip_attempts($mysqli, $ip)
     {
         $attempts += $record['attempts'];
     }
-    if ($attempts >= 3)
+    if ($attempts >= MAX_LOGIN_ATTEMPTS + 1)
     {
         $msg = "IP {$ip} attempted {$attempts} times for different emails";
         log_warning($msg);
@@ -295,16 +299,43 @@ function check_email_attempts($mysqli, $email)
     {
         $attempts += $record['attempts'];
     }
-    if ($attempts >= 3)
+    if ($attempts >= MAX_LOGIN_ATTEMPTS + 1)
     {
-        $msg = "Email {$email} attempted many times from different IPs";
+        $msg = "Email {$email} attempted too many times";
         log_warning($msg);
         return false;
     }
     return true;
 }
 
-function handle_quarantine($mysqli, $ip, $email)
+function handle_quarantine_signup($mysqli, $ip)
+{
+    $records = \DBM\getQuarantineByIp($mysqli, $ip);
+    $attempts = 0;
+    foreach ($records as $record)
+    {
+        $attempts += $record['attempts'];
+    }
+
+    if ($attempts >= MAX_LOGIN_ATTEMPTS)
+    {
+        log_warning("IP {$ip} is trying to create multiple accounts in few minutes.");
+        return false;
+    }
+
+    $rv = \DBM\insertQuarantine($mysqli, $ip, 'SIGNUP', null);
+    if ($rv)
+    {
+        log_info("IP {$ip} inserted in quarantine");
+    } else
+    {
+        log_error("Failed to insert quarantine record for IP {$ip}");
+        return false;
+    }
+    return true;
+}
+
+function handle_quarantine_login($mysqli, $ip, $email)
 {
     $records = \DBM\getQuarantineByEmail($mysqli, $email);
     $attempts = 0;
@@ -315,7 +346,7 @@ function handle_quarantine($mysqli, $ip, $email)
 
     $unlock_token = null;
     $token_hash = null;
-    if ($attempts >= 2)
+    if ($attempts >= MAX_LOGIN_ATTEMPTS)
     {
         $unlock_token = bin2hex(random_bytes(32));
         $token_hash = hash('sha256', $unlock_token);
@@ -331,7 +362,7 @@ function handle_quarantine($mysqli, $ip, $email)
         return false;
     }
 
-    if ($attempts >= 2)
+    if ($attempts >= MAX_LOGIN_ATTEMPTS)
     {
         $rv = \EMAIL\send_unlock_email($email, $unlock_token);
         return $rv;
@@ -344,24 +375,23 @@ function check_token($mysqli, $email, $token)
     $rv = \DBM\getTokenByEmail($mysqli, $email);
     if (!$rv)
     {
-        log_warning("RESET - No token found for email {$email}");
+        log_warning("TOKEN - No token found for email {$email}");
         return false;
     }
 
     $token_stored = $rv['token'];
     if (!$token_stored)
     {
-        // todo: ragionarci un attimo
-        log_warning("CONFIRM - User {$email} has no token set");
+        log_warning("TOKEN - User {$email} has no token set");
         return false;
     }
     if (hash_equals($token_stored, $token_hash))
     {
-        log_info("CONFIRM - Token is valid for email {$email}. Account confirmed.");
+        log_info("TOKEN - Token is valid for email {$email}. Account confirmed.");
         return true;
     } else
     {
-        log_warning("CONFIRM - Token is not valid for email {$email}");
+        log_warning("TOKEN - Token is not valid for email {$email}");
         return false;
     }
 }
@@ -390,8 +420,7 @@ function tokenReset($mysqli, $email, $token_hash)
 
 function reset_password($mysqli, $email, $password)
 {
-    $salt     = bin2hex(random_bytes(16));
-    $passhash = hash('sha256', $salt . $password);
+    $passhash = password_hash($password, PASSWORD_BCRYPT);
 
     $rv = \DBM\getUserByEmail($mysqli, $email);
     if (!$rv)
@@ -408,7 +437,7 @@ function reset_password($mysqli, $email, $password)
         return false;
     }
 
-    $rv = \DBM\updateUserPassword($mysqli, $email, $passhash, $salt);
+    $rv = \DBM\updateUserPassword($mysqli, $email, $passhash);
     if (!$rv)
     {
         $msg = 'DB connection failed';
@@ -489,7 +518,7 @@ function become_premium($mysqli, $email)
 
 function confirm($mysqli, $email, $role)
 {
-    $rv = \DBM\updateUserRole($mysqli, $email, $role);
+    $rv = \DBM\updateUserRoleByEmail($mysqli, $email, $role);
     if (!$rv)
     {
         log_error("CONFIRM - Failed to confirm user {$email}");

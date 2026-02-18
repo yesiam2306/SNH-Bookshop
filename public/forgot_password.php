@@ -4,12 +4,16 @@ require_once SRC_PATH . '/session_boot.php';
 require_once SRC_PATH . '/user/u_auth.php';
 require_once SRC_PATH . '/utils/log.php';
 require_once SRC_PATH . '/utils/validator.php';
+require_once SRC_PATH . '/utils/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST')
 {
     if (empty($_POST['email']))
     {
-        $user_error_message = ('Input fields cannot be empty.');
+        http_response_code(400);
+        $error_message = 'Email requested.';
+        \RESP\redirect_with_message($error_message, false, "forgot_password.php");
+        exit;
     } elseif (!hash_equals($_SESSION['__csrf'] ?? '', $_POST['csrf_token'] ?? ''))
     {
         log_error("CSRF - Invalid token on role update.");
@@ -20,7 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         $email = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
         if (!$email)
         {
-            $user_error_message = 'Invalid email format.';
+            http_response_code(400);
+            $error_message = 'Email not valid.';
+            \RESP\redirect_with_message($error_message, false, "forgot_password.php");
+            exit;
         } else
         {
             $token = bin2hex(random_bytes(32));
@@ -33,8 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                 $_SESSION['__forgot_confirmed'] = true;
                 header('Location: forgot_success.php');
                 exit;
+            } else
+            {
+                http_response_code(500);
+                $error_message = 'Internal server error.';
+                \RESP\redirect_with_message($error_message, false, "forgot_password.php");
+                exit;
             }
-            // todo else
         }
 
     }
@@ -63,6 +75,7 @@ $bg = $backgrounds[array_rand($backgrounds)];
         </div>
 
         <div id="main" style="--bg-image: url('<?php echo $bg; ?>');">
+            <?php \RESP\render_flash(); ?>
             <div class="login-container" style="text-align:left;">
             <form action="forgot_password.php" method="post" class="login-form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">

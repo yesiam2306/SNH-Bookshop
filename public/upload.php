@@ -7,13 +7,6 @@ require_once SRC_PATH . '/utils/log.php';
 require_once SRC_PATH . '/utils/response.php';
 require_once SRC_PATH . '/file/f_upload.php';
 
-if (empty($_SESSION['__csrf']))
-{
-    log_error("CSRF - Missing CSRF token in session for user: " . $_SESSION['email']);
-    header('Location: logout.php');
-    exit;
-}
-
 $user = \USER\current_user($mysqli);
 if (!$user)
 {
@@ -27,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     {
         $max_size = ini_get('post_max_size');
         http_response_code(400);
-        $error_message = 'Error occurred during file upload. The max file size is 50MB.';
-        \RESP\redirect_with_message($error_message, false, "index.php");
+        $error_message = "Error occurred during file upload. The max file size is {$max_size}.";
+        \RESP\redirect_with_message($error_message, false, "upload.php");
         exit;
     }
 
@@ -49,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     {
         http_response_code(400);
         $error_message = 'Invalid title.';
-        \RESP\redirect_with_message($error_message, false, "index.php");
+        \RESP\redirect_with_message($error_message, false, "upload.php");
         exit;
     }
     if ($type === 'short')
@@ -59,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         {
             http_response_code(500);
             $error_message = 'Internal server error.';
-            \RESP\redirect_with_message($error_message, false, "index.php");
+            \RESP\redirect_with_message($error_message, false, "upload.php");
             exit;
         }
 
@@ -74,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         {
             http_response_code(500);
             $error_message = 'Internal server error.';
-            \RESP\redirect_with_message($error_message, false, "index.php");
+            \RESP\redirect_with_message($error_message, false, "upload.php");
             exit;
         }
 
@@ -95,9 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             !\FILE\check_hash($mysqli, $hash, $user['email']) ||
             !\FILE\move_file($tmp_path, $dest))
         {
-            http_response_code(400);
-            $error_message = 'Error occurred during file upload. The max file size is 50MB.';
-            \RESP\redirect_with_message($error_message, false, "index.php");
+            http_response_code(500);
+            $error_message = 'Error occurred during file upload. The max file size is 50MB. Only .pdf allowed.';
+            \RESP\redirect_with_message($error_message, false, "upload.php");
             exit;
         }
 
@@ -113,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         );
         if (!$rv)
         {
-            unlink($dest); // cleanup
+            unlink($dest); // lo elimina dal disco.
             http_response_code(500);
             $error_message = 'Internal server error.';
-            \RESP\redirect_with_message($error_message, false, "index.php");
+            \RESP\redirect_with_message($error_message, false, "upload.php");
             exit;
         }
 
@@ -129,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     {
         http_response_code(400);
         $msg = 'Invalid upload type.';
-        \RESP\redirect_with_message($msg, false, "index.php");
+        \RESP\redirect_with_message($msg, false, "upload.php");
         exit;
     }
 }
@@ -162,18 +155,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             </div>
         </div>
 
-        <!-- <?php if (isset($_SESSION['flash'])):
-            $flash = $_SESSION['flash'];
-            unset($_SESSION['flash']);
-            $is_success = ($flash['code'] == 200);
-            ?>
-        <div class="flash-message <?= $is_success ? 'success' : 'error' ?>">
-            <?= htmlspecialchars($flash['message']) ?>
-        </div>
-        <?php endif; ?> -->
 
         <!-- MAIN -->
         <div id="main">
+            <?php \RESP\render_flash(); ?>
             <div class="catalog-container upload-container">
                 <h2>Upload new novel</h2>
 

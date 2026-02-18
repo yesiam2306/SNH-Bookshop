@@ -40,6 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     } else
     {
         $email = \VALIDATOR\sanitize_email($_POST['email'] ?? '');
+        if (!$email)
+        {
+            http_response_code(400);
+            $error_message = 'Invalid email format.';
+            \RESP\redirect_with_message($error_message, false, "login.php");
+        }
         if (!\USER\check_ip_attempts($mysqli, $_SERVER['REMOTE_ADDR']) ||
             !\USER\check_email_attempts($mysqli, $email))
         {

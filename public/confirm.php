@@ -1,3 +1,5 @@
+<!-- questa è la pagina che viene visitata quando l'utente clicca sul link di conferma ricevuto via email -->
+
 <?php
 
 require_once __DIR__ . '/../app_data/config/config.php';

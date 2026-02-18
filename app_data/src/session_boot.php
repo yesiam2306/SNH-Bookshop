@@ -1,13 +1,11 @@
 <?php
 
-$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-
 session_set_cookie_params([
   'lifetime' => 0,
   'path'     => '/',
-  'secure'   => $secure,
+  'secure'   => true,
   'httponly' => true,
-  'samesite' => 'Lax'
+  'samesite' => 'Strict'
 ]);
 
 session_start();
@@ -23,6 +21,8 @@ if (isset($_SESSION['__last_activity']) && time() - $_SESSION['__last_activity']
 {
     session_unset();
     session_destroy();
+    header('Location: login.php');
+    exit();
 }
 
 if (empty($_SESSION['__csrf']))

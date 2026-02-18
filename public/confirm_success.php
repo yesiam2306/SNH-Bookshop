@@ -1,3 +1,5 @@
+<!-- questa è la pagina che conferma all'utente che la sua email è stata verificata con successo -->
+
 <?php
 require_once __DIR__ . '/../app_data/config/config.php';
 require_once SRC_PATH . '/session_boot.php';

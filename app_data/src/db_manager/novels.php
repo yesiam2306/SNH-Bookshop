@@ -16,7 +16,7 @@ function getNovelById($mysqli, $novel_id)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getNovelById");
     }
 
     return $result->fetch_assoc();
@@ -33,7 +33,7 @@ function getNovelPDFById($mysqli, $novel_id)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getNovelPDFById");
     }
 
     return $result->fetch_assoc();
@@ -50,7 +50,7 @@ function getNovelByTitle($mysqli, $title, $email, $is_short)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getNovelByTitle");
     }
 
     return $result->fetch_assoc();
@@ -67,7 +67,7 @@ function getContentById($mysqli, $novel_id)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getContentById");
     }
 
     return $result->fetch_assoc();
@@ -82,7 +82,7 @@ function getAllNovels($mysqli)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getAllNovels");
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -99,7 +99,7 @@ function getAllNovelsByOthers($mysqli, $email)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getAllNovelsByOthers");
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -117,7 +117,7 @@ function searchNovelsByTitle($mysqli, $email, $query)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: searchNovelsByTitle");
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -163,7 +163,7 @@ function countFiles($mysqli, $email, $hash)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: countFiles");
     }
 
     return $result->fetch_assoc();

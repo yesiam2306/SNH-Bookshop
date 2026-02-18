@@ -16,7 +16,7 @@ function getQuarantineByEmail($mysqli, $email)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getQuarantineByEmail");
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -34,7 +34,7 @@ function getQuarantineByIp($mysqli, $ip)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getQuarantineByIp");
     }
 
     return $result->fetch_all(MYSQLI_ASSOC);
@@ -51,7 +51,7 @@ function getTokenByKey($mysqli, $ip, $email)
 
     if (!$result)
     {
-        log_error("DB Error: " . $mysqli->error);
+        log_error("DB Error: getTokenByKey");
     }
 
     return $result->fetch_assoc();
@@ -65,14 +65,12 @@ function insertQuarantine($mysqli, $ip, $email, $unlock_token)
                                     last_attempt = NOW(),
                                     unlock_token = VALUES(unlock_token);');
     $stmt->bind_param('sss', $ip, $email, $unlock_token);
-    $stmt->execute();
-    return true;
+    return $stmt->execute();
 }
 
 function deleteQuarantineRecord($mysqli, $ip, $email)
 {
     $stmt = $mysqli->prepare('DELETE FROM quarantine WHERE ip = ? AND email = ?;');
     $stmt->bind_param('ss', $ip, $email);
-    $stmt->execute();
-    return true;
+    return $stmt->execute();
 }

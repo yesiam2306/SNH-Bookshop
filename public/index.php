@@ -12,10 +12,7 @@ if (!$user)
     exit;
 }
 
-// require_once DBM_PATH . '/users.php';
-// $rv = \DBM\updateUserUser($mysqli, $user['email']);
-// \USER\edit_session("User");
-// $new_catalog = \USER\create_catalog($mysqli);
+$new_catalog = \USER\create_catalog($mysqli);
 
 // cose per css
 $backgrounds = [];

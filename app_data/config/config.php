@@ -39,7 +39,7 @@ define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_PORT', 587);
 define('MAIL_FROM_NAME', 'SNH Project');
 define('MAIL_SECURE', 'tls');
-define('SITE_BASE', 'https://localhost/SNH_Proj/public');
+define('SITE_BASE', 'https://localhost/');
 
 function debug($var, $label = '')
 {
@@ -51,3 +51,5 @@ function debug($var, $label = '')
     echo htmlspecialchars(print_r($var, true));
     echo "</pre>";
 }
+
+define('MAX_LOGIN_ATTEMPTS', 4);

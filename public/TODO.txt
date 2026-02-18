@@ -1,20 +1,7 @@
+
+
 sistemare remember me e controllare che non vadano in conflitto i token
     
 controllare i vari event sul db settando tempi diversi se eseguono correttamente le routine
 
 PULIZIA DI UPLOADS
-
-ogni tanto compare una riga di log tipo questa
-2026-02-04 19:39:16 [WARNING] (uid=3) - UNLOCK - Invalid request parameters. Email or token missing. | IP=::1 | UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0
-
----------------------------------------------------------------
-cose non fatte perché non richieste e perché i tempi stringono
-
-USERNAME
-email per dire che un utente è diventato premium.
-lista degli utenti che vogliono diventare premium.
-CAPTCHA
-ANTIVIRUS
-sezioni del sito dove un utente può vedere tutti i file caricati o il suo stato
-una stessa email non può essere associata contemporaneamente ad un admin e ad un utente
-

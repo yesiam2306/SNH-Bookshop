@@ -2,7 +2,7 @@
 
 namespace VALIDATOR;
 
-const ALLOWED_SYMBOLS = '!\"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~';
+const ALLOWED_SYMBOLS = '!@#$%()[]{}_+-*/=;:,.?\\';
 
 function sanitize_string(string $input): string
 {
@@ -38,10 +38,6 @@ function validate_password(string $password, string $email = ''): array
     if (!preg_match('/[' . preg_quote(ALLOWED_SYMBOLS, '/') . ']/', $password))
     {
         $errors[] = "Password must include at least one special character (" . ALLOWED_SYMBOLS . ").";
-    }
-    if ($email && stripos($password, strtok($email, '@')) !== false)
-    {
-        $errors[] = "Password should not contain part of the email.";
     }
 
     return $errors;

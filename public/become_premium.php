@@ -1,5 +1,3 @@
-<!-- todo: cancellare -->
-
 <?php
 
 require_once __DIR__ . '/../app_data/config/config.php';
@@ -34,7 +32,7 @@ if (!$rv)
     $message = "Oops, something went wrong. Please try again later.";
 } else
 {
-    $message = "This is your lucky day. You've become Premium without paying, enjoy! :)";
+    $message = "Please contact an administrator to become Premium.";
 }
 
 ?>

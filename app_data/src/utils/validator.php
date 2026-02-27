@@ -15,7 +15,7 @@ function sanitize_email(string $email): ?string
     return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
 }
 
-function validate_password(string $password, string $email = ''): array
+function validate_password(string $password): array
 {
     $errors = [];
 

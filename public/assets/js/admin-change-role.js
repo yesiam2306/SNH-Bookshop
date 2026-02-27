@@ -61,3 +61,8 @@ rows.forEach((row) => {
         modal.style.display = 'flex';
     });
 });
+
+closeBtn.onclick = () => (modal.style.display = 'none');
+modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+};

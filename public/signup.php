@@ -143,13 +143,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                                 <img src="assets/img/mostra.png" alt="Show password">
                             </button>
                         </div>
-                        <?php if (!empty($password_error_message)): ?>
-                            <span id="password-error" class="error-message">
+
+                        <span id="password-error" class="error-message" 
+                            style="<?= empty($password_error_message) ? 'display:none;' : '' ?>">
+                            <?php if (!empty($password_error_message)): ?>
                                 <?php foreach ($password_error_message as $msg): ?>
                                     <?= htmlspecialchars($msg) ?><br>
                                 <?php endforeach; ?>
-                            </span>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                        </span>
+
                         <ul id="password-checklist" class="password-rules">
                             Please choose a password with:
                             <li id="rule-length">At least 12 characters</li>

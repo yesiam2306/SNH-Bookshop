@@ -21,6 +21,7 @@ form.addEventListener('submit', function (e) {
     if (password.value !== confirm.value) {
         e.preventDefault();
         error.style.display = 'block';
+        error.textContent = 'Password and confirmation do not match.';
         return;
     } else {
         error.style.display = 'none';
